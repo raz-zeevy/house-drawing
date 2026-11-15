@@ -3,7 +3,8 @@
 // (the dog), or with `pages` (house extents) it keeps to one house at a time: inside a house wider
 // than the window you pan freely, and swiping past its edge moves to the neighbour. Swipe or drag pans it; pinch
 // widens it up to 1.8 street-heights tall, the extra going mostly to sky, some to road;
-// `goTo(x)` glides to a spot and stays there until the next swipe.
+// `goTo(x)` glides to a spot and stays there until the next swipe. On load it opens close in
+// and then eases out to the widest view, unless a touch gets there first.
 import { f } from '../lib/ink.ts';
 import { clamp } from '../lib/motion.ts';
 import { H } from './kit.ts';
@@ -14,7 +15,7 @@ export interface View { x: number; y: number; w: number; h: number }
 export interface Camera { narrow(): boolean; goTo(x: number): void; step(t: number, dt: number, followX: number): View }
 
 export function camera(svg: SVGSVGElement, stage: HTMLElement, width: number, onFit: (narrow: boolean) => void, pages?: [number, number][]): Camera {
-  let fitW = width, maxW = width, aspect = 1, viewW = 0, camX = 0, swipedAt = -99, now = 0, dragX: number | null = null, aim: number | null = null, dragFrom = 0;
+  let intro = true, introFrom: number | null = null, fitW = width, maxW = width, aspect = 1, viewW = 0, camX = 0, swipedAt = -99, now = 0, dragX: number | null = null, aim: number | null = null, dragFrom = 0;
   const narrow = () => fitW < width - 1;
   const full: View = { x: 0, y: 0, w: width, h: H };
   function fit(): void {
@@ -36,6 +37,7 @@ export function camera(svg: SVGSVGElement, stage: HTMLElement, width: number, on
     if (!narrow()) return;
     touches.set(e.pointerId, e.clientX);
     aim = null;
+    intro = false;
     if (touches.size === 2) { pinch = { d: spread(), w: viewW }; dragX = null; } else { dragX = e.clientX; dragFrom = camX; }
   });
   addEventListener('pointermove', (e) => {
@@ -81,6 +83,13 @@ export function camera(svg: SVGSVGElement, stage: HTMLElement, width: number, on
     step(t, dt, followX) {
       now = t;
       if (!narrow()) return full;
+      if (intro) {
+        introFrom ??= t;
+        if (t - introFrom > 0.6) {
+          viewW += (maxW - viewW) * Math.min(1, dt * 1.4);
+          if (maxW - viewW < 0.5) { viewW = maxW; intro = false; }
+        }
+      }
       if (aim !== null) camX += (clamp(aim, 0, width - viewW) - camX) * Math.min(1, dt * 2.5);
       else if (!pages && t - swipedAt > 4) camX += (clamp(followX - viewW * 0.4, 0, width - viewW) - camX) * Math.min(1, dt * 0.8);
       camX = clamp(camX, 0, width - viewW);
