@@ -1,0 +1,17 @@
+{
+  "name": "house-drawing",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "An animated ink drawing of the house behind the trees.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "typecheck": "tsc",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.1.9"
+  }
+}
