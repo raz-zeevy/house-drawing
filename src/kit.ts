@@ -64,9 +64,9 @@ export function blocks(g: Element, x0: number, x1: number, y0: number, y1: numbe
   P(g, d.join(' '), SP * 0.45);
 }
 
-/** A flat colour (fill or stroke) pushed toward the night palette. */
-export function tint<T extends Element>(ctx: Ctx, n: T, colour: string, attr = 'fill'): T {
-  ctx.add({ paint: (pal) => n.setAttribute(attr, nightTint(colour, pal)) });
+/** A flat colour (fill or stroke) pushed toward the night palette; `night` is how far (light surfaces need more). */
+export function tint<T extends Element>(ctx: Ctx, n: T, colour: string, attr = 'fill', night = 0.55): T {
+  ctx.add({ paint: (pal) => n.setAttribute(attr, nightTint(colour, pal, night)) });
   return n;
 }
 
@@ -93,7 +93,7 @@ export function blob(ctx: Ctx, cx: number, cy: number, r: number, sq = 0.8, lobe
 }
 
 /** A foliage clump that sways as a whole on a spring driven by the wind; `shake()` kicks it. */
-export interface Clump extends Part { shake(): void }
+export interface Clump extends Part { g: SVGGElement; shake(): void }
 export type Foliage = 'leaf' | 'frond' | 'ivy';
 export function clump(ctx: Ctx, parent: Element, cx: number, cy: number, r: number, kind: Foliage, n: number, accent?: string, share = 0.3): Clump {
   const g = el('g', {}, parent);
@@ -108,6 +108,7 @@ export function clump(ctx: Ctx, parent: Element, cx: number, cy: number, r: numb
   if (accent && acc.length) tint(ctx, paint(g, accent, SP * 0.4), accent).setAttribute('d', acc.join(' '));
   const k = 1.25 - cy / H, s: Spring = spring(28, 5), ph = ctx.rand(0, 20);
   const part: Clump = {
+    g,
     step: ({ t, dt, wind }) => g.setAttribute('transform', `translate(${f(s.step(wind * 1.6 * k + wobble(t * 0.8 + ph) * 0.5 * k, dt))} 0)`),
     shake: () => s.kick((Math.random() - 0.5) * 60),
   };
