@@ -12,6 +12,7 @@ export default defineConfig({
         street: page('prototypes/street.html'),
         map: page('prototypes/map.html'),
         postcards: page('prototypes/postcards.html'),
+        houses: page('prototypes/houses.html'),
       },
     },
   },
