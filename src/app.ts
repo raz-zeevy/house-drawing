@@ -30,7 +30,9 @@ export interface StreetOptions {
 
 export function mountStreet({ stage, lots, label, paged, onFit, onView }: StreetOptions): { camera: Camera; placed: Placed[]; width: number } {
   const q = new URLSearchParams(location.search);
-  const time = clock({ start: Number(q.get('start') ?? 0.6), day: Number(q.get('day') ?? 180), pinned: q.has('tau') ? Number(q.get('tau')) : null });
+  const d = new Date(), nowTau = (d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds()) / 86400;
+  // Real time by default (the visitor's local clock, one day per day); ?start / ?day / ?tau override.
+  const time = clock({ start: Number(q.get('start') ?? nowTau), day: Number(q.get('day') ?? 86400), pinned: q.has('tau') ? Number(q.get('tau')) : null });
   const placed: Placed[] = [];
   let width = 0;
   for (const lot of lots) { placed.push({ name: lot.name, x0: width, width: lot.width }); width += lot.width; }

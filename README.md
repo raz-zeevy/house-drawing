@@ -17,7 +17,7 @@ npm run build      # dist/
 Every push to `main` is typechecked, built and published by `.github/workflows/pages.yml`.
 
 URL flags: `?tau=0.5` pins the time of day (0 midnight, 0.5 noon), `?start=0.6` sets the
-starting time, `?day=180` the seconds per day, `?debug` steps time by hand (`window.__step(s)`).
+starting time (default: the local time now), `?day=180` the seconds per day (default 86400, real time), `?debug` steps time by hand (`window.__step(s)`).
 
 ## Layout
 
