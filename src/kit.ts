@@ -3,7 +3,7 @@
 // (bowed boxes, leaves, foliage clumps, hanging strands, windows that light up).
 import { el, pen, shape, paint, hang, f, type Vec } from '../lib/ink.ts';
 import { spring, pendulum, wobble, smooth, type Spring, type Pendulum } from '../lib/motion.ts';
-import { nightTint, mix, rgb, type RGB, type Palette } from '../lib/daynight.ts';
+import { nightTint, mix, rgb, toRGB, type RGB, type Palette } from '../lib/daynight.ts';
 import type { Drop } from './falls.ts';
 
 export const H = 440, GROUND = 404, SP = 0.8;
@@ -64,9 +64,17 @@ export function blocks(g: Element, x0: number, x1: number, y0: number, y1: numbe
   P(g, d.join(' '), SP * 0.45);
 }
 
-/** A flat colour (fill or stroke) pushed toward the night palette; `night` is how far (light surfaces need more). */
-export function tint<T extends Element>(ctx: Ctx, n: T, colour: string, attr = 'fill', night = 0.55): T {
-  ctx.add({ paint: (pal) => n.setAttribute(attr, nightTint(colour, pal, night)) });
+/** A flat colour (fill or stroke) pushed toward the night palette: small accents that should stay readable. */
+export function tint<T extends Element>(ctx: Ctx, n: T, colour: string, attr = 'fill'): T {
+  ctx.add({ paint: (pal) => n.setAttribute(attr, nightTint(colour, pal)) });
+  return n;
+}
+
+const NOON_PAPER = toRGB('#fdfcf8');
+/** A coloured surface (walls, roof, gates) lit like the paper: it takes the same dusk and night light as plain paper walls. */
+export function surface<T extends Element>(ctx: Ctx, n: T, colour: string, attr = 'fill'): T {
+  const c = toRGB(colour);
+  ctx.add({ paint: (pal) => n.setAttribute(attr, rgb(c.map((v, i) => (v * pal.paper[i]) / NOON_PAPER[i]) as RGB)) });
   return n;
 }
 

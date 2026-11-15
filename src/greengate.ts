@@ -7,7 +7,7 @@
 import { el, pen, paint, limb, hang, f, type Vec } from '../lib/ink.ts';
 import { seeded, spring, wobble, clamp } from '../lib/motion.ts';
 import type { Drop } from './falls.ts';
-import { type Ctx, type Clump, type LotDef, C, H, SP, P, S, at, box, blocks, clump, leaf, tint, win } from './kit.ts';
+import { type Ctx, type Clump, type LotDef, C, H, SP, P, S, at, box, blocks, clump, leaf, surface, tint, win } from './kit.ts';
 
 const WIDTH = 1100;
 const K = {
@@ -26,7 +26,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   const tube = (g: Element, pts: Vec[], w: number, colour: string) => {
     const l = limb(g, w, SP * 0.55);
     l.draw(pts, [0, 0]);
-    tint(ctx, l.g.querySelector('path')!, colour);
+    surface(ctx, l.g.querySelector('path')!, colour);
   };
 
   // ---------- behind: a bare tree on the left, a big leafy tree on the right
@@ -51,9 +51,9 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   // ---------- the house
   const house = lay('house');
   S(house, 'M440 100 Q520 60 604 20 Q700 60 792 100Z', SP * 1.1);
-  tint(ctx, paint(house, K.ROOF, SP * 0.8), K.ROOF).setAttribute('d', 'M452 98 Q526 62 604 26 Q694 62 780 98Z');
+  surface(ctx, paint(house, K.ROOF, SP * 0.8), K.ROOF).setAttribute('d', 'M452 98 Q526 62 604 26 Q694 62 780 98Z');
   P(house, Array.from({ length: 9 }, (_, i) => `M${f(462 + i * 36)} 98 L604 26`).join(' '), SP * 0.35);
-  tint(ctx, paint(house, K.STONE, SP), K.STONE, 'fill', 1.25).setAttribute('d', box(300, 96, 470, 262, 0.6));
+  surface(ctx, paint(house, K.STONE, SP), K.STONE).setAttribute('d', box(300, 96, 470, 262, 0.6));
   blocks(house, 300, 770, 100, 350, 16, 44);
   // roof terrace with a lattice railing
   const lattice: string[] = ['M300 74 L472 74 M300 74 L300 96 M472 74 L472 96'];
@@ -130,7 +130,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   const gate = el('g', { style: 'cursor:pointer' }, wl);
   el('title', {}, gate).textContent = 'Green gate';
   el('path', { d: box(198, 304, 36, 48, 0.2), fill: 'url(#h-mesh)' }, gate);
-  tint(ctx, paint(gate, K.GREEN, SP * 0.8), K.GREEN).setAttribute('d', box(198, 352, 36, 50, 0.3));
+  surface(ctx, paint(gate, K.GREEN, SP * 0.8), K.GREEN).setAttribute('d', box(198, 352, 36, 50, 0.3));
   for (const pts of [[[197, 302], [235, 302]], [[197, 352], [235, 352]], [[197, 302], [197, 403]], [[235, 302], [235, 403]]] as Vec[][]) tube(gate, pts, 2.4, K.GREEN);
   S(gate, box(203, 316, 22, 13, 0.2), SP * 0.5);
   P(gate, 'M206 320 l16 0 M206 323 l12 0 M206 326 l14 0', SP * 0.3);
@@ -183,7 +183,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
       wires[2].setAttribute('d', `M148 -44 Q620 ${f(sag(58, 1.2))} ${WIDTH + 4} 14`);
     },
   });
-  tint(ctx, paint(fr, K.CABINET, SP), K.CABINET, 'fill', 1.25).setAttribute('d', box(26, 360, 104, 58, 0.4));
+  surface(ctx, paint(fr, K.CABINET, SP), K.CABINET).setAttribute('d', box(26, 360, 104, 58, 0.4));
   P(fr, 'M78 362 L78 416 M32 368 l40 0', SP * 0.5);
   S(fr, box(88, 370, 18, 12, 0.1), SP * 0.4);
   S(fr, box(108, 372, 14, 10, 0.1), SP * 0.4);
