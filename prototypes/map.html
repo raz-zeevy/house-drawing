@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prototype B · Map, then street</title>
+<link rel="stylesheet" href="./proto.css">
+</head>
+<body>
+  <h1>B · A map of the street first; tap a house to walk into it</h1>
+  <div class="card"><div id="stage"></div><div id="map"></div></div>
+  <div class="nav"><button id="back" type="button" hidden>Back to the map</button></div>
+  <div class="bar"><span id="hint"></span><div class="time"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13.6 3.2a7 7 0 1 0 3.4 10.6A6 6 0 0 1 13.6 3.2z"/></svg><div class="track"><input id="time" type="range" min="0" max="1" step="0.001" value="0.8" aria-label="Time of day"><span id="clock"></span></div><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6"/><path d="M10 1.8v2.4M10 15.8v2.4M1.8 10h2.4M15.8 10h2.4M4.2 4.2l1.7 1.7M14.1 14.1l1.7 1.7M4.2 15.8l1.7-1.7M14.1 5.9l1.7-1.7"/></svg></div></div>
+  <script type="module" src="./map.ts"></script>
+</body>
+</html>

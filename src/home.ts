@@ -7,15 +7,14 @@
 import { el, pen, blot, paint, limb, f, type Vec } from '../lib/ink.ts';
 import { spring, pendulum, clamp, wobble } from '../lib/motion.ts';
 import { mix, rgb } from '../lib/daynight.ts';
-import { type Ctx, type Clump, type Strand, type Win, type LayerName, C, GLASS, WARM, SP, P, S, at, box, blocks, clump, fillPath, leaf, strand, tint, win } from './kit.ts';
+import { type Ctx, type Clump, type Strand, type Win, type LayerName, type Lot, type LotDef, C, GLASS, WARM, SP, P, S, at, box, blocks, clump, fillPath, leaf, strand, tint, win } from './kit.ts';
 import type { Drop } from './falls.ts';
 
-export const WIDTH = 1280;
 const OX = 320; // the gate-side photo starts here
 
-export interface Lot { width: number; sniffAt: number }
+export const homeLot: LotDef = { name: 'The house behind the trees', width: 1280, build: (ctx, x0, drop) => home(ctx, x0, drop) };
 
-export function home(ctx: Ctx, x0: number, drop: Drop): Lot {
+function home(ctx: Ctx, x0: number, drop: Drop): Lot {
   const lay = (name: LayerName, dx = 0) => at(ctx.layers[name], x0 + dx);
   const glowL = at(ctx.glow, x0), glowR = at(ctx.glow, x0 + OX);
   const acacia: Clump[] = [], bushy: Clump[] = [];
@@ -105,7 +104,7 @@ export function home(ctx: Ctx, x0: number, drop: Drop): Lot {
   ac.addEventListener('pointerdown', (e) => { acacia.forEach((c) => c.shake()); fronds.forEach((s) => s.kick(Math.random() * 2 - 0.6)); drop(e, 7, [C.FROND]); });
   hedge.addEventListener('pointerdown', () => tendrils.forEach((s) => s.kick(Math.random() * 3 - 1.5)));
 
-  return { width: WIDTH, sniffAt: x0 + OX + 650 };
+  return { sniffAt: x0 + OX + 650 };
 }
 
 /** Roller shutter over a window; it starts almost closed and dims the window's glow. Returns the toggle. */

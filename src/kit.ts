@@ -4,6 +4,7 @@
 import { el, pen, shape, paint, hang, f, type Vec } from '../lib/ink.ts';
 import { spring, pendulum, wobble, smooth, type Spring, type Pendulum } from '../lib/motion.ts';
 import { nightTint, mix, rgb, type RGB, type Palette } from '../lib/daynight.ts';
+import type { Drop } from './falls.ts';
 
 export const H = 440, GROUND = 404, SP = 0.8;
 export const C = { RUST: '#a5583c', IVY: '#7f9668', FROND: '#9aa86a', RED: '#8e3b2c', GREY: '#9c9e9b', NUMBER: '#c9706b' } as const;
@@ -20,6 +21,11 @@ export interface Part {
 
 export const LAYERS = ['back', 'house', 'acacia', 'terrace', 'bigTree', 'right', 'hedge', 'wall', 'front', 'street', 'fall'] as const;
 export type LayerName = (typeof LAYERS)[number];
+
+/** A house on the street: how wide its lot is, and how to draw it at x0. */
+export interface LotDef { name: string; width: number; build(ctx: Ctx, x0: number, drop: Drop): Lot }
+/** What a drawn lot tells the street: where the dog likes to stop and sniff. */
+export interface Lot { sniffAt?: number }
 
 /** Everything a house needs to draw itself into the shared street. */
 export interface Ctx {

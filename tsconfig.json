@@ -11,7 +11,8 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"]
   },
-  "include": ["src", "lib", "vite.config.ts"]
+  "include": ["src", "lib", "prototypes", "vite.config.ts"]
 }
