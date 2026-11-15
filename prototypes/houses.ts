@@ -9,14 +9,18 @@ import { greenGateLot } from '../src/greengate.ts';
 
 const LOTS = [homeLot, greenGateLot];
 import { plan } from './plan.ts';
+import { rgb } from '../lib/daynight.ts';
 
 const nameEl = document.querySelector<HTMLElement>('#name')!, mapBtn = document.querySelector<HTMLButtonElement>('#mapBtn')!;
+const card = document.querySelector<HTMLElement>('.card')!;
 const prev = document.querySelector<HTMLButtonElement>('.arrow.prev')!, next = document.querySelector<HTMLButtonElement>('.arrow.next')!;
 let page = 0, viewW = 1280, gliding = true; // while gliding to a chosen house, the view doesn't pick the page
 
 const { camera, placed, width } = mountStreet({
   stage, lots: LOTS, label: 'Houses on a street, one at a time', paged: true,
   onFit: () => hint('Swipe or use the arrows to visit the neighbours; the map shows the whole street.'),
+  // the arrows sit on the drawing, so they take its ink and paper as the light changes
+  onPaint: (pal) => { card.style.setProperty('--scene-ink', rgb(pal.ink)); card.style.setProperty('--scene-paper', rgb(pal.paper)); },
   onView: (v) => {
     viewW = v.w;
     const mid = v.x + v.w / 2, centre = (j: number) => placed[j].x0 + placed[j].width / 2;

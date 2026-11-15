@@ -7,9 +7,9 @@
 @media (hover: hover) { .ink-btn:hover svg { transform: rotate(-4deg) scale(1.06); } }
 #mapBtn svg { width: 46px; height: 46px; }
 #mapBtn[aria-pressed="true"] { color: var(--accent); }
-.arrow { position: absolute; top: 50%; translate: 0 -50%; z-index: 2; }
+.arrow { position: absolute; top: 50%; translate: 0 -50%; z-index: 2; color: var(--scene-ink, var(--ink)); transition: color .6s ease; }
 .arrow svg { width: 54px; height: 54px; }
-.arrow .disc { fill: var(--paper); fill-opacity: .88; stroke-width: 1.1; }
+.arrow .disc { fill: var(--scene-paper, var(--paper)); fill-opacity: .88; stroke-width: 1.1; transition: fill .6s ease; }
 .arrow.prev { left: 14px; } .arrow.next { right: 14px; }
 .arrow[hidden] { display: none; }
 .name { margin: 0; font-size: 20px; font-style: italic; text-align: center; min-height: 1.5em; transition: opacity .3s ease; }

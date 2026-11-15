@@ -4,7 +4,7 @@
 // day, ?start=0.6 sets the starting time, ?day=180 the seconds per day, ?t and ?debug as in lib/ink.
 import { el, inkDefs, run, PAPER } from '../lib/ink.ts';
 import { pointerWind, seeded } from '../lib/motion.ts';
-import { palette, applyPalette } from '../lib/daynight.ts';
+import { palette, applyPalette, type Palette } from '../lib/daynight.ts';
 import { type Ctx, type LotDef, type Part, H, LAYERS, GROUND, tint } from './kit.ts';
 import { street } from './street.ts';
 import { falls } from './falls.ts';
@@ -26,9 +26,11 @@ export interface StreetOptions {
   onFit?: (narrow: boolean) => void;
   /** Called every frame with the visible window. */
   onView?: (view: View) => void;
+  /** Called whenever the scene's colours change with the time of day. */
+  onPaint?: (pal: Palette) => void;
 }
 
-export function mountStreet({ stage, lots, label, paged, onFit, onView }: StreetOptions): { camera: Camera; placed: Placed[]; width: number } {
+export function mountStreet({ stage, lots, label, paged, onFit, onView, onPaint }: StreetOptions): { camera: Camera; placed: Placed[]; width: number } {
   const q = new URLSearchParams(location.search);
   const d = new Date(), nowTau = (d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds()) / 86400;
   // Real time by default (the visitor's local clock, one day per day); ?start / ?day / ?tau override.
@@ -76,6 +78,7 @@ export function mountStreet({ stage, lots, label, paged, onFit, onView }: Street
       applyPalette(svg, pal);
       heavens.paint(pal);
       for (const p of parts) p.paint?.(pal);
+      onPaint?.(pal);
     }
     for (const p of parts) p.step?.(fr);
     animals.step(t, dt, fr.wind);
