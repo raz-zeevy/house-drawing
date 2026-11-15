@@ -1,6 +1,7 @@
 // When the stage is narrower than the street's shape (a phone, or a street of several
 // houses), the viewBox becomes a window of the stage's own shape. It follows a target
-// (the dog), or with `pages` (house centres) it snaps from house to house. Swipe or drag pans it; pinch
+// (the dog), or with `pages` (house extents) it keeps to one house at a time: inside a house wider
+// than the window you pan freely, and swiping past its edge moves to the neighbour. Swipe or drag pans it; pinch
 // widens it up to 1.8 street-heights tall, the extra going mostly to sky, some to road;
 // `goTo(x)` glides to a spot and stays there until the next swipe.
 import { f } from '../lib/ink.ts';
@@ -12,7 +13,7 @@ export interface View { x: number; y: number; w: number; h: number }
 
 export interface Camera { narrow(): boolean; goTo(x: number): void; step(t: number, dt: number, followX: number): View }
 
-export function camera(svg: SVGSVGElement, stage: HTMLElement, width: number, onFit: (narrow: boolean) => void, pages?: number[]): Camera {
+export function camera(svg: SVGSVGElement, stage: HTMLElement, width: number, onFit: (narrow: boolean) => void, pages?: [number, number][]): Camera {
   let fitW = width, maxW = width, aspect = 1, viewW = 0, camX = 0, swipedAt = -99, now = 0, dragX: number | null = null, aim: number | null = null, dragFrom = 0;
   const narrow = () => fitW < width - 1;
   const full: View = { x: 0, y: 0, w: width, h: H };
@@ -52,13 +53,26 @@ export function camera(svg: SVGSVGElement, stage: HTMLElement, width: number, on
     if (touches.size < 2) pinch = null;
     dragX = null;
   });
-  // centre the page nearest the window's centre, or the next one over after a decisive drag
+  // Stay inside the house the drag began in: a house wider than the window can be panned
+  // edge to edge, a narrower one is centred. Dragging decisively past its edge (or onto
+  // another house) moves to the neighbour, landing on its near edge.
   const snap = (moved: number) => {
     const ps = pages!, mid = camX + viewW / 2, was = dragFrom + viewW / 2;
-    const nearest = (x: number) => ps.reduce((best, p, j) => (Math.abs(p - x) < Math.abs(ps[best] - x) ? j : best), 0);
-    const i = nearest(mid), from = nearest(was);
-    const to = i === from && Math.abs(moved) > viewW * 0.12 ? clamp(i + Math.sign(moved), 0, ps.length - 1) : i;
-    return ps[to] - viewW / 2;
+    const nearest = (x: number) => ps.reduce((best, [a, b], j) => (Math.abs((a + b) / 2 - x) < Math.abs((ps[best][0] + ps[best][1]) / 2 - x) ? j : best), 0);
+    const range = (j: number): [number, number] => {
+      const [a, b] = ps[j];
+      return b - a > viewW ? [a, b - viewW] : [(a + b) / 2 - viewW / 2, (a + b) / 2 - viewW / 2];
+    };
+    const from = nearest(was), [lo, hi] = range(from), slack = viewW * 0.12;
+    let to = nearest(mid);
+    if (to === from) {
+      if (moved > 0 && camX > hi + slack) to = from + 1;
+      else if (moved < 0 && camX < lo - slack) to = from - 1;
+      to = clamp(to, 0, ps.length - 1);
+    }
+    if (to === from) return clamp(camX, lo, hi);
+    const [nlo, nhi] = range(to);
+    return to > from ? nlo : nhi;
   };
 
   return {

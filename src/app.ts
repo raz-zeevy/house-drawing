@@ -64,7 +64,7 @@ export function mountStreet({ stage, lots, label, paged, onFit, onView }: Street
   const built = lots.map((lot, i) => lot.build(ctx, placed[i].x0, drop));
   road.kerbLine();
   const animals = beagle(ctx.layers.street, { ground: GROUND + 20, scale: 1.0, width, sniffAt: built.find((b) => b.sniffAt)?.sniffAt ?? width * 0.5, tint: (n, c, attr) => tint(ctx, n, c, attr) });
-  const cam = camera(svg, stage, width, onFit ?? (() => {}), paged ? placed.map((p) => p.x0 + p.width / 2) : undefined);
+  const cam = camera(svg, stage, width, onFit ?? (() => {}), paged ? placed.map((p): [number, number] => [p.x0, p.x0 + p.width]) : undefined);
 
   const wind = pointerWind(svg, 0.3);
   let painted = -1;
