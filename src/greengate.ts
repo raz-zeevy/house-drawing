@@ -7,7 +7,7 @@
 import { el, pen, paint, limb, hang, f, type Vec } from '../lib/ink.ts';
 import { seeded, spring, wobble, clamp } from '../lib/motion.ts';
 import type { Drop } from './falls.ts';
-import { type Ctx, type Clump, type LotDef, C, H, SP, P, S, at, box, blocks, clump, leaf, surface, tint, win } from './kit.ts';
+import { type Ctx, type Clump, type LotDef, C, GROUND, H, SP, P, S, at, box, blocks, clump, leaf, surface, tint, win } from './kit.ts';
 
 // The drawing spans 0..1104; the lot is one desktop card wide (1280) so a card never shows two houses,
 // with the walls carried on through the PAD on each side.
@@ -31,6 +31,16 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
     surface(ctx, l.g.querySelector('path')!, colour);
   };
 
+  // ---------- next door on the left: a stone house with barred windows, half behind a dense tree
+  const nb = lay('back');
+  surface(ctx, paint(nb, K.STONE, SP), K.STONE).setAttribute('d', box(L - 4, 110, 124, 250, 0.4));
+  blocks(nb, L - 4, L + 120, 114, 350, 16, 40);
+  S(nb, box(L - 6, 104, 130, 6, 0.2), SP * 0.8);
+  for (const y of [150, 252]) {
+    win(ctx, nb, glowG, L + 22, y, 40, 46, R(0.45, 0.7));
+    P(nb, Array.from({ length: 5 }, (_, i) => `M${f(L + 29 + i * 6.5)} ${y} L${f(L + 29 + i * 6.5)} ${y + 46}`).join(' '), SP * 0.8);
+  }
+
   // ---------- behind: a bare tree on the left, a big leafy tree on the right
   const back = lay('back');
   const twigs: string[] = [];
@@ -47,6 +57,9 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   limb(back, 12, SP).draw([[880, 344], [872, 230], [890, 130]], [0, 0]);
   for (const [x, y, r] of [[800, 70, 60], [900, 30, 70], [1010, 60, 62], [760, 160, 52], [860, 140, 70], [980, 150, 66], [1060, 190, 48], [920, 230, 55]])
     leafy.push(clump(ctx, back, x, y, r, 'leaf', r * 3.6, C.IVY, 0.2));
+  // the bare tree is only bare at the top: dense leaves fill it below
+  for (const [x, y, r] of [[34, 196, 38], [96, 184, 34], [10, 258, 42], [76, 246, 44], [40, 312, 40], [112, 300, 34]])
+    leafy.push(clump(ctx, back, x, y, r, 'leaf', r * 4, C.IVY, 0.5));
   back.style.cursor = 'pointer';
   back.addEventListener('pointerdown', (e) => { leafy.forEach((c) => c.shake()); drop(e, 8, [C.IVY, C.FROND]); });
 
@@ -108,6 +121,16 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
     const cx = R(250, 560), cy = R(topY(cx) + 6, 330);
     for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2; blue.push(`M${f(cx + Math.cos(a) * 2.6)} ${f(cy + Math.sin(a) * 2.6)} a1.2 1.2 0 1 0 0.1 0Z`); }
   }
+  // the plumbago spills over the wall left of the gate too
+  const bushTop = (x: number) => 188 + (196 - x) * 0.32 + 8 * Math.abs(Math.sin(x * 0.06));
+  const bt: string[] = [];
+  for (let x = 54; x <= 196; x += 3) bt.push(`${x} ${f(bushTop(x))}`);
+  S(hd, `M54 352 L${bt.join(' L')} L196 352Z`, SP * 0.8);
+  for (let i = 0; i < 1300; i++) { const x = R(58, 193), y = R(bushTop(x) + 4, 348); (R() < 0.62 ? acc : plain).push(leaf(x, y, R(3, 4.6), R(0.4, 2.7), 0.5)); }
+  for (let i = 0; i < 24; i++) {
+    const cx = R(64, 188), cy = R(bushTop(cx) + 6, 330);
+    for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2; blue.push(`M${f(cx + Math.cos(a) * 2.6)} ${f(cy + Math.sin(a) * 2.6)} a1.2 1.2 0 1 0 0.1 0Z`); }
+  }
   for (let i = 0; i < 46; i++) { const x = R(600, 980), y = R(topY(x) + 4, 300); red.push(`M${f(x)} ${f(y)} a1.8 1.5 0 1 0 0.1 0Z`); }
   P(hd, plain.join(' '), SP * 0.45);
   tint(ctx, paint(hd, C.IVY, SP * 0.4), C.IVY).setAttribute('d', acc.join(' '));
@@ -120,6 +143,9 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   const wl = lay('wall');
   S(wl, box(L - 2, 350, 198 + PAD, 54));
   blocks(wl, L - 2, 196, 350, 404, 18, 40);
+  // next door's green wire fence along the top of the wall
+  for (let x = L + 8; x < 56; x += 44) tube(wl, [[x, 351], [x, 304]], 1.6, K.GREEN);
+  tint(ctx, el('path', { d: [312, 326, 340].map((y) => `M${L} ${y} Q${f((L + 56) / 2)} ${y + 2} 56 ${y}`).join(' '), fill: 'none', 'stroke-width': 0.6 }, wl), K.GREEN, 'stroke');
   S(wl, box(236, 352, 326, 52));
   blocks(wl, 236, 562, 352, 404, 17, 42);
   for (const [a, b, top] of [[562, 704, 350], [704, 848, 342], [848, 990, 334]]) { // three steps up the street
@@ -175,6 +201,14 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   const kerb: string[] = [];
   for (let x = L; x < R1; x += 60) kerb.push(box(x, H, 30, 6, 0.1));
   tint(ctx, paint(wl, K.BLOSSOM, SP * 0.4), K.BLOSSOM).setAttribute('d', kerb.join(' '));
+  // the pavement here is a patchwork of grey, sand and charcoal pavers, laid on the street's 14x7 joints
+  const PAVERS = ['#bdb7ad', '#928d87', '#d9c7a2', '#75716d', '#a89a86'];
+  const shades: string[][] = PAVERS.map(() => []), off = (x0 + PAD) % 14;
+  for (let r = 0; r < 5; r++) for (let x = (r % 2 ? 7 : 0) - off - 112; x + 14 <= R1; x += 14) {
+    if (x < L || R() < 0.3) continue;
+    shades[Math.floor(R(0, PAVERS.length))].push(`M${f(x + 0.6)} ${f(GROUND + r * 7 + 0.6)} h12.8 v5.8 h-12.8Z`);
+  }
+  PAVERS.forEach((c, i) => surface(ctx, el('path', { d: shades[i].join(' ') }, wl), c));
 
   // ---------- in front: the pole with its yellow climber and wires, the electrical cabinet
   const fr = lay('front');
