@@ -7,6 +7,7 @@
 import { el, pen, paint, limb, hang, f, type Vec } from '../lib/ink.ts';
 import { seeded, spring, wobble, clamp } from '../lib/motion.ts';
 import type { Drop } from './falls.ts';
+import { lady } from './lady.ts';
 import { type Ctx, type Clump, type LotDef, C, GROUND, H, SP, P, S, at, box, blocks, clump, leaf, surface, tint, win } from './kit.ts';
 
 // The drawing spans 0..1104; the lot is one desktop card wide (1280) so a card never shows two houses,
@@ -264,6 +265,8 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   fr.addEventListener('pointerdown', (e) => { climber.forEach((c) => c.shake()); drop(e, 8, [K.YELLOW, K.YELLOW, C.IVY]); });
 
   // ---------- on the pavement, in front of whoever walks by: metal barriers
+  lady(ctx, lay('street'), GROUND + 16, R1 + 60, L - 60); // walks slowly by, right to left
+
   const fall = lay('fall');
   for (const x of [300, 420, 760]) {
     const d = `M${x} 440 L${x} 404 Q${x} 396 ${x + 8} 396 L${x + 62} 396 Q${x + 70} 396 ${x + 70} 404 L${x + 70} 440 M${x + 2} 436 L${x + 68} 406 M${x + 2} 406 L${x + 68} 436`;
