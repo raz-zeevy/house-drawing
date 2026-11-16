@@ -65,28 +65,30 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
 
   // ---------- the house
   const house = lay('house');
-  // one low gable across the whole house, behind the roof-terrace railing
-  S(house, 'M282 100 Q388 64 495 26 Q602 64 708 100Z', SP * 1.1);
-  surface(ctx, paint(house, K.ROOF, SP * 0.8), K.ROOF).setAttribute('d', 'M296 98 Q392 66 495 32 Q598 66 694 98Z');
-  P(house, Array.from({ length: 11 }, (_, i) => `M${f(310 + i * 37)} 98 L495 32`).join(' '), SP * 0.35);
-  surface(ctx, paint(house, K.STONE, SP), K.STONE).setAttribute('d', box(300, 96, 390, 262, 0.6));
-  blocks(house, 300, 690, 100, 350, 16, 44);
+  // a hipped roof across the whole house: a trapezoid up to a short ridge, a small dark gablet on top
+  S(house, 'M282 84 Q350 60 424 36 L566 36 Q640 60 708 84Z', SP * 1.1);
+  surface(ctx, paint(house, K.ROOF, SP * 0.8), K.ROOF).setAttribute('d', 'M296 82 Q356 61 427 40 L563 40 Q634 61 694 82Z');
+  P(house, Array.from({ length: 12 }, (_, i) => `M${f(427 + (i * 136) / 11)} 40 L${f(306 + (i * 378) / 11)} 82`).join(' '), SP * 0.35);
+  S(house, 'M468 37 L495 18 L522 37Z', SP * 0.9);
+  surface(ctx, paint(house, '#5c4a42', SP * 0.6), '#5c4a42').setAttribute('d', 'M474 35.5 L495 21 L516 35.5Z');
+  surface(ctx, paint(house, K.STONE, SP), K.STONE).setAttribute('d', box(300, 80, 390, 278, 0.6));
+  blocks(house, 300, 690, 84, 350, 16, 44);
   // roof terrace with a lattice railing
-  const lattice: string[] = ['M300 74 L472 74 M300 74 L300 96 M472 74 L472 96'];
-  for (let x = 300; x < 472; x += 12) lattice.push(`M${x} 96 L${x + 12} 76 M${x} 76 L${x + 12} 96`);
+  const lattice: string[] = ['M300 58 L472 58 M300 58 L300 80 M472 58 L472 80'];
+  for (let x = 300; x < 472; x += 12) lattice.push(`M${x} 80 L${x + 12} 60 M${x} 60 L${x + 12} 80`);
   P(house, lattice.join(' '), SP * 0.6);
-  S(house, box(294, 94, 402, 7, 0.2), SP * 0.9);
+  S(house, box(294, 78, 402, 7, 0.2), SP * 0.9);
   // enclosed balcony: a row of transoms over a row of tall panes, flower boxes on the sill
   const cols = 6, pw = 250 / cols, bar = 6, holes: string[] = [];
   for (let c = 0; c < cols; c++) {
     const px = 312 + c * pw + bar / 2;
-    for (const [py, ph] of [[114, 13], [133, 53]]) { win(ctx, house, glowG, px, py, pw - bar, ph, R(0.4, 0.62), false); holes.push(box(px, py, pw - bar, ph, 0.2)); }
+    for (const [py, ph] of [[98, 12], [116, 70]]) { win(ctx, house, glowG, px, py, pw - bar, ph, R(0.4, 0.62), false); holes.push(box(px, py, pw - bar, ph, 0.2)); }
   }
   // a broad white frame: one paper band with a hole cut for every pane
-  S(house, box(312, 108, 250, 80, 0.3) + ' ' + holes.join(' '), SP * 0.8).setAttribute('fill-rule', 'evenodd');
+  S(house, box(312, 92, 250, 96, 0.3) + ' ' + holes.join(' '), SP * 0.8).setAttribute('fill-rule', 'evenodd');
   // reflections, so the panes read as glass rather than holes
   const glints: string[] = [];
-  for (let c = 0; c < cols; c++) { const gx = 318 + c * pw; glints.push(`M${f(gx + 4)} 150 L${f(gx + 16)} 132 M${f(gx + 8)} 164 L${f(gx + 26)} 138`); }
+  for (let c = 0; c < cols; c++) { const gx = 318 + c * pw; glints.push(`M${f(gx + 4)} 140 L${f(gx + 16)} 122 M${f(gx + 8)} 154 L${f(gx + 26)} 128`); }
   el('path', { d: glints.join(' '), fill: 'none', style: 'stroke: var(--paper)', 'stroke-width': 1.4, 'stroke-linecap': 'round', opacity: 0.55 }, house);
   S(house, box(306, 188, 262, 10, 0.2), SP * 0.8);
   // the balcony garden: a bushy plant, a planter of red geraniums, terracotta pots, a fern on the right
@@ -112,8 +114,8 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   S(house, box(296, 198, 290, 12, 0.3), SP * 1.1);
   P(house, 'M300 214 L582 214', SP * 0.4).setAttribute('opacity', '0.6');
   // barred window and a window below the balcony, mostly behind the hedge
-  win(ctx, house, glowG, 604, 120, 56, 62, 0.5);
-  P(house, Array.from({ length: 7 }, (_, i) => `M${611 + i * 7} 120 L${611 + i * 7} 182`).join(' '), SP * 0.9);
+  win(ctx, house, glowG, 604, 112, 56, 70, 0.5);
+  P(house, Array.from({ length: 7 }, (_, i) => `M${611 + i * 7} 112 L${611 + i * 7} 182`).join(' '), SP * 0.9);
   win(ctx, house, glowG, 330, 228, 44, 46, 0.55);
   win(ctx, house, glowG, 610, 226, 46, 50, 0.48);
 
