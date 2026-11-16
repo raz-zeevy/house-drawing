@@ -52,9 +52,10 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
 
   // ---------- the house
   const house = lay('house');
-  S(house, 'M440 100 Q520 60 604 20 Q700 60 792 100Z', SP * 1.1);
-  surface(ctx, paint(house, K.ROOF, SP * 0.8), K.ROOF).setAttribute('d', 'M452 98 Q526 62 604 26 Q694 62 780 98Z');
-  P(house, Array.from({ length: 9 }, (_, i) => `M${f(462 + i * 36)} 98 L604 26`).join(' '), SP * 0.35);
+  // one low gable across the whole house, behind the roof-terrace railing
+  S(house, 'M282 100 Q410 62 535 22 Q660 62 788 100Z', SP * 1.1);
+  surface(ctx, paint(house, K.ROOF, SP * 0.8), K.ROOF).setAttribute('d', 'M296 98 Q414 64 535 28 Q656 64 774 98Z');
+  P(house, Array.from({ length: 13 }, (_, i) => `M${f(310 + i * 37.5)} 98 L535 28`).join(' '), SP * 0.35);
   surface(ctx, paint(house, K.STONE, SP), K.STONE).setAttribute('d', box(300, 96, 470, 262, 0.6));
   blocks(house, 300, 770, 100, 350, 16, 44);
   // roof terrace with a lattice railing
@@ -97,7 +98,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   const topY = (x: number) => (x < 560 ? 196 : 238) + 10 * Math.abs(Math.sin(x * 0.045)) + 6 * Math.sin(x * 0.011) + (x > 520 && x < 600 ? (x - 520) * 0.5 : 0);
   const top: string[] = [];
   for (let x = 240; x <= 990; x += 3) top.push(`${x} ${f(Math.min(topY(x), x < 560 ? 230 : 280))}`);
-  S(hd, `M240 352 L${top.join(' L')} L990 340Z`, SP * 0.8);
+  S(hd, `M240 352 L${top.join(' L')} L990 352Z`, SP * 0.8);
   const plain: string[] = [], acc: string[] = [], blue: string[] = [], red: string[] = [];
   for (let i = 0; i < 4200; i++) {
     const x = R(244, 986), y = R(topY(x) + 4, 348);
@@ -121,17 +122,29 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   blocks(wl, L - 2, 196, 350, 404, 18, 40);
   S(wl, box(236, 352, 326, 52));
   blocks(wl, 236, 562, 352, 404, 17, 42);
-  S(wl, box(562, 334, 428, 70));
-  blocks(wl, 562, 990, 340, 404, 16, 46);
-  S(wl, box(558, 330, 434, 6, 0.2), SP * 0.8);
+  for (const [a, b, top] of [[562, 704, 350], [704, 848, 342], [848, 990, 334]]) { // three steps up the street
+    S(wl, box(a, top, b - a, 404 - top));
+    blocks(wl, a, b, top + 6, 404, 16, 46);
+    S(wl, box(a - 3, top - 4, b - a + 6, 6, 0.2), SP * 0.8);
+  }
   tint(ctx, paint(wl, K.PLATE, SP * 0.4), K.PLATE).setAttribute('d', box(246, 360, 8, 9, 0.2));
   P(wl, 'M249 362 q2 -1 2 1 q0 2 -2 2 q2 0 2 2 q0 2 -2 1', SP * 0.35);
   // the pedestrian gate: green frame, mesh above a solid panel, a little sign; click to open
   const dark = el('path', { d: box(196, 300, 40, 104) }, wl);
-  ctx.add({ paint: (pal) => dark.setAttribute('fill', `rgb(${pal.paper.map((v) => Math.round(v * 0.5)).join(',')})`) });
+  surface(ctx, dark, '#5f7650');
+  const garden: Clump[] = [];
+  for (const [x, y, r] of [[214, 246, 30], [198, 278, 24], [232, 282, 24], [214, 318, 18], [226, 338, 14]])
+    garden.push(clump(ctx, wl, x, y, r, 'leaf', r * 5, C.IVY, 0.75));
+  for (const c of garden) { c.g.style.cursor = 'pointer'; c.g.addEventListener('pointerdown', (e) => { garden.forEach((g) => g.shake()); drop(e, 6, [C.IVY, C.FROND]); }); }
   const gate = el('g', { style: 'cursor:pointer' }, wl);
   el('title', {}, gate).textContent = 'Green gate';
-  el('path', { d: box(198, 304, 36, 48, 0.2), fill: 'url(#h-mesh)' }, gate);
+  // see-through chain-link in the upper frame, so the garden shows behind it
+  const link: string[] = [], [mx, my, mw, mh, sp] = [198, 304, 36, 48, 4];
+  for (let c = -mh; c < mw; c += sp) { // diagonals both ways, clipped to the frame
+    const x0 = Math.max(0, c), x1 = Math.min(mw, c + mh);
+    link.push(`M${f(mx + x0)} ${f(my + x0 - c)} L${f(mx + x1)} ${f(my + x1 - c)}`, `M${f(mx + x0)} ${f(my + mh - (x0 - c))} L${f(mx + x1)} ${f(my + mh - (x1 - c))}`);
+  }
+  P(gate, link.join(' '), SP * 0.3).setAttribute('opacity', '0.7');
   surface(ctx, paint(gate, K.GREEN, SP * 0.8), K.GREEN).setAttribute('d', box(198, 352, 36, 50, 0.3));
   for (const pts of [[[197, 302], [235, 302]], [[197, 352], [235, 352]], [[197, 302], [197, 403]], [[235, 302], [235, 403]]] as Vec[][]) tube(gate, pts, 2.4, K.GREEN);
   S(gate, box(203, 316, 22, 13, 0.2), SP * 0.5);
