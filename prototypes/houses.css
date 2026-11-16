@@ -27,3 +27,18 @@
 }
 #map g:focus { outline: none; }
 #map g:focus-visible > path:first-of-type { stroke: var(--accent); }
+/* The time slider's knob is the sun by day and the moon by night: the native thumb is an
+   invisible 28px grip, and .orb draws the icon over it at the same spot. */
+.sky .track { --k: 28px; }
+.sky #time { appearance: none; -webkit-appearance: none; height: var(--k); background: none; cursor: grab; touch-action: none; }
+.sky #time:active { cursor: grabbing; }
+.sky #time::-webkit-slider-runnable-track { height: 1.5px; background: var(--muted); border-radius: 1px; }
+.sky #time::-moz-range-track { height: 1.5px; background: var(--muted); border-radius: 1px; }
+.sky #time::-webkit-slider-thumb { -webkit-appearance: none; width: var(--k); height: var(--k); margin-top: calc(var(--k) / -2 + .75px); background: none; border: 0; }
+.sky #time::-moz-range-thumb { width: var(--k); height: var(--k); background: none; border: 0; }
+.sky .orb { position: absolute; top: 0; left: calc(var(--pos) * (100% - var(--k))); width: var(--k); height: var(--k); pointer-events: none; color: var(--ink); background: radial-gradient(circle, var(--ground) 62%, transparent 64%); }
+.sky .orb svg { position: absolute; inset: 0; width: 100%; height: 100%; fill: var(--ground); stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; transition: opacity .4s ease, transform .4s ease; }
+.sky .orb .sun { color: var(--accent); }
+.sky [data-sky="day"] .moon, .sky [data-sky="night"] .sun { opacity: 0; transform: scale(.6) rotate(-30deg); }
+.sky #time:active + .orb svg { transform: scale(1.15); }
+.sky #clock { left: calc(var(--pos) * (100% - var(--k)) + var(--k) / 2); }

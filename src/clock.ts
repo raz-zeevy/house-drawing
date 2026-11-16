@@ -19,6 +19,7 @@ export function clock({ start, day, pinned }: { start: number; day: number; pinn
       const pos = thumb(current);
       if (input && !sliding) input.value = f(pos);
       track?.style.setProperty('--pos', f(pos));
+      if (track) track.dataset.sky = current > 0.27 && current < 0.77 ? 'day' : 'night'; // sun from ~6:30 to ~18:30
       if (text) text.textContent = hhmm(current);
       return current;
     },
