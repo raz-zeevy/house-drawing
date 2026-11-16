@@ -48,7 +48,7 @@ export function mountStreet({ stage, lots, label, paged, onFit, onView, onPaint 
   const glowGrad = el('radialGradient', { id: 'h-glow' }, defs);
   el('stop', { offset: 0, 'stop-color': 'rgb(255,200,130)', 'stop-opacity': 0.85 }, glowGrad);
   el('stop', { offset: 1, 'stop-color': 'rgb(255,200,130)', 'stop-opacity': 0 }, glowGrad);
-  const heavens = sky(svg, defs, width);
+  const heavens = sky(svg, defs, width, (tau) => time.set(tau));
 
   // the ink wobble filter is the costliest thing on the page; phones draw clean lines instead
   const scene = el('g', matchMedia('(pointer: coarse)').matches ? {} : { filter }, svg);

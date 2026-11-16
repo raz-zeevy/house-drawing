@@ -4,15 +4,17 @@
 // current half of the day. The clock text rides above the thumb.
 import { f } from '../lib/ink.ts';
 
-export function clock({ start, day, pinned }: { start: number; day: number; pinned: number | null }): { tau(t: number): number } {
+export function clock({ start, day, pinned: pin }: { start: number; day: number; pinned: number | null }): { tau(t: number): number; set(tau: number): void } {
   const input = document.querySelector<HTMLInputElement>('#time'), text = document.querySelector('#clock'), track = document.querySelector<HTMLElement>('.track');
-  let base = start, since = 0, now = 0, current = start, sliding = false;
+  let pinned = pin, base = start, since = 0, now = 0, current = start, sliding = false;
   const thumb = (tau: number) => (tau < 0.5 ? tau * 2 : (1 - tau) * 2);
   const hhmm = (tau: number) => { const m = Math.floor(tau * 1440); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; };
   input?.addEventListener('input', () => { const v = Number(input.value); base = current < 0.5 ? v / 2 : 1 - v / 2; since = now; });
   input?.addEventListener('pointerdown', () => { sliding = true; });
   for (const ev of ['pointerup', 'change']) input?.addEventListener(ev, () => { sliding = false; });
   return {
+    // jump to a time of day (dragging the sun or moon in the sky); the clock runs on from there
+    set(tau) { if (pinned !== null) pinned = tau; else { base = tau; since = now; } },
     tau(t) {
       now = t;
       current = pinned ?? ((((base + (t - since) / day) % 1) + 1) % 1);
