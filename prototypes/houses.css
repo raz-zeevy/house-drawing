@@ -42,3 +42,6 @@
 .sky [data-sky="day"] .moon, .sky [data-sky="night"] .sun { opacity: 0; transform: scale(.6) rotate(-30deg); }
 .sky #time:active + .orb svg { transform: scale(1.15); }
 .sky #clock { left: calc(var(--pos) * (100% - var(--k)) + var(--k) / 2); }
+/* Architect's hand lettering to match the drawing; it has no italic, so none is faked. */
+body { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; }
+.name, #hint { font-style: normal; }
