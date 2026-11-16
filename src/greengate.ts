@@ -267,8 +267,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   P(fr, 'M40 384 q6 -8 10 0 t10 -2 M44 396 l6 -6 l4 8 l6 -6', SP * 0.4).setAttribute('opacity', '0.45');
   // doves and green parakeets on the lowest wire
   const flock = birds(ctx, fr, [
-    { kind: 'dove', s: 0.48, dir: 1 }, { kind: 'dove', s: 0.53, dir: -1 }, { kind: 'parakeet', s: 0.61, dir: 1 },
-    { kind: 'parakeet', s: 0.645, dir: -1 }, { kind: 'parakeet', s: 0.68, dir: 1 }, { kind: 'dove', s: 0.75, dir: 1 }, { kind: 'parakeet', s: 0.83, dir: -1 },
+    { kind: 'dove', s: 0.5, dir: 1 }, { kind: 'dove', s: 0.56, dir: -1 }, { kind: 'parakeet', s: 0.66, dir: 1 }, { kind: 'dove', s: 0.76, dir: 1 },
   ], (u) => [(1 - u) ** 2 * 148 + 2 * u * (1 - u) * 620 + u * u * (R1 + 4), (1 - u) ** 2 * -44 + 2 * u * (1 - u) * low + u * u * 14]);
   fr.addEventListener('pointerdown', (e) => { climber.forEach((c) => c.shake()); flock.startle(); drop(e, 8, [K.YELLOW, K.YELLOW, C.IVY]); });
 
@@ -276,23 +275,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   lady(ctx, lay('street'), GROUND + 16, R1 + 60, L - 60); // walks slowly by, right to left
 
   const fall = lay('fall');
-  // ---------- two cars parked nose-in against the wall, seen from behind: a dark grey van and a small silver hatchback
-  const car = (cx: number, w: number, h: number, body: string, glass: [number, number, number]) => {
-    const yb = 444, half = w / 2, [gTop, gWide, gNarrow] = glass;
-    for (const sx of [-1, 1]) el('path', { d: box(cx + sx * (half - 7) - 6, yb - 12, 12, 12, 0.3), fill: 'currentColor' }, fall); // tyres
-    surface(ctx, paint(fall, body, SP), body).setAttribute('d',
-      `M${cx - half} ${yb - 10} L${cx - half} ${yb - gTop + 8} Q${cx - half + 1} ${yb - h + 4} ${cx - half + (w - gNarrow) / 2 - 2} ${yb - h} L${cx + half - (w - gNarrow) / 2 + 2} ${yb - h} Q${cx + half - 1} ${yb - h + 4} ${cx + half} ${yb - gTop + 8} L${cx + half} ${yb - 10} Q${cx} ${yb - 8} ${cx - half} ${yb - 10}Z`);
-    const glassD = `M${cx - gWide / 2} ${yb - gTop} L${cx - gNarrow / 2} ${yb - h + 5} Q${cx} ${yb - h + 4} ${cx + gNarrow / 2} ${yb - h + 5} L${cx + gWide / 2} ${yb - gTop} Q${cx} ${yb - gTop + 1.4} ${cx - gWide / 2} ${yb - gTop}Z`;
-    surface(ctx, paint(fall, '#2b2e34', SP * 0.7), '#2b2e34').setAttribute('d', glassD);
-    P(fall, `M${cx - gNarrow / 2 + 6} ${yb - h + 9} l10 ${gTop - h + 18} M${cx - gNarrow / 2 + 12} ${yb - h + 8} l6 ${(gTop - h + 18) * 0.6}`, SP * 0.5).setAttribute('style', 'stroke: var(--paper); opacity: .5');
-    P(fall, `M${cx - half + 2} ${yb - 20} Q${cx} ${yb - 18} ${cx + half - 2} ${yb - 20}`, SP * 0.6); // bumper
-    for (const sx of [-1, 1]) tint(ctx, paint(fall, '#c43a30', SP * 0.5), '#c43a30').setAttribute('d', box(sx < 0 ? cx - half + 2 : cx + half - 8, yb - gTop - 2, 6, 14, 0.3));
-    tint(ctx, paint(fall, '#f0c933', SP * 0.5), '#f0c933').setAttribute('d', box(cx - 12, yb - 30, 24, 6, 0.2)); // Israeli yellow plate
-  };
-  car(744, 76, 82, '#4f545b', [48, 70, 58]);
-  car(818, 62, 58, '#c4c7cb', [30, 54, 42]);
-
-  for (const x of [300, 420, 884]) {
+  for (const x of [300, 420, 760]) {
     const d = `M${x} 440 L${x} 404 Q${x} 396 ${x + 8} 396 L${x + 62} 396 Q${x + 70} 396 ${x + 70} 404 L${x + 70} 440 M${x + 2} 436 L${x + 68} 406 M${x + 2} 406 L${x + 68} 436`;
     el('path', { d, fill: 'none', stroke: 'currentColor', 'stroke-width': 2.8, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'pointer-events': 'none' }, fall);
     el('path', { d, fill: 'none', style: 'stroke: var(--paper)', 'stroke-width': 1.1, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'pointer-events': 'none' }, fall);
