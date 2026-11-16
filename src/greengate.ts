@@ -53,16 +53,16 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   // ---------- the house
   const house = lay('house');
   // one low gable across the whole house, behind the roof-terrace railing
-  S(house, 'M282 100 Q410 62 535 22 Q660 62 788 100Z', SP * 1.1);
-  surface(ctx, paint(house, K.ROOF, SP * 0.8), K.ROOF).setAttribute('d', 'M296 98 Q414 64 535 28 Q656 64 774 98Z');
-  P(house, Array.from({ length: 13 }, (_, i) => `M${f(310 + i * 37.5)} 98 L535 28`).join(' '), SP * 0.35);
-  surface(ctx, paint(house, K.STONE, SP), K.STONE).setAttribute('d', box(300, 96, 470, 262, 0.6));
-  blocks(house, 300, 770, 100, 350, 16, 44);
+  S(house, 'M282 100 Q388 64 495 26 Q602 64 708 100Z', SP * 1.1);
+  surface(ctx, paint(house, K.ROOF, SP * 0.8), K.ROOF).setAttribute('d', 'M296 98 Q392 66 495 32 Q598 66 694 98Z');
+  P(house, Array.from({ length: 11 }, (_, i) => `M${f(310 + i * 37)} 98 L495 32`).join(' '), SP * 0.35);
+  surface(ctx, paint(house, K.STONE, SP), K.STONE).setAttribute('d', box(300, 96, 390, 262, 0.6));
+  blocks(house, 300, 690, 100, 350, 16, 44);
   // roof terrace with a lattice railing
   const lattice: string[] = ['M300 74 L472 74 M300 74 L300 96 M472 74 L472 96'];
   for (let x = 300; x < 472; x += 12) lattice.push(`M${x} 96 L${x + 12} 76 M${x} 76 L${x + 12} 96`);
   P(house, lattice.join(' '), SP * 0.6);
-  S(house, box(294, 94, 482, 7, 0.2), SP * 0.9);
+  S(house, box(294, 94, 402, 7, 0.2), SP * 0.9);
   // enclosed balcony: a row of transoms over a row of tall panes, flower boxes on the sill
   S(house, box(312, 108, 250, 86, 0.3), SP * 1.1);
   const cols = 6, pw = 250 / cols;
