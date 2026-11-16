@@ -44,4 +44,5 @@
 .sky #clock { left: calc(var(--pos) * (100% - var(--k)) + var(--k) / 2); }
 /* Architect's hand lettering to match the drawing; it has no italic, so none is faked. */
 body { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; }
-.name, #hint { font-style: normal; }
+.name { font-style: normal; }
+.bar { justify-content: flex-end; }

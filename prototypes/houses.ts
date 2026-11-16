@@ -3,7 +3,7 @@
 // name sits underneath. The folded-map icon at the top opens the street from above,
 // zooming out from the current house; tapping a house there zooms into it.
 import { mountStreet } from '../src/app.ts';
-import { stage, hint } from './lots.ts';
+import { stage } from './lots.ts';
 import { homeLot } from '../src/home.ts';
 import { greenGateLot } from '../src/greengate.ts';
 
@@ -18,7 +18,6 @@ let page = 0, viewW = 1280, gliding = true; // while gliding to a chosen house, 
 
 const { camera, placed, width } = mountStreet({
   stage, lots: LOTS, label: 'Houses on a street, one at a time', paged: true,
-  onFit: () => hint('Swipe or use the arrows to visit the neighbours; the map shows the whole street.'),
   // the arrows sit on the drawing, so they take its ink and paper as the light changes
   onPaint: (pal) => { card.style.setProperty('--scene-ink', rgb(pal.ink)); card.style.setProperty('--scene-paper', rgb(pal.paper)); },
   onView: (v) => {
