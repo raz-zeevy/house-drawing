@@ -77,15 +77,13 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   P(house, lattice.join(' '), SP * 0.6);
   S(house, box(294, 94, 402, 7, 0.2), SP * 0.9);
   // enclosed balcony: a row of transoms over a row of tall panes, flower boxes on the sill
-  S(house, box(312, 108, 250, 86, 0.3), SP * 1.1);
-  const cols = 6, pw = 250 / cols;
+  const cols = 6, pw = 250 / cols, bar = 6, holes: string[] = [];
   for (let c = 0; c < cols; c++) {
-    win(ctx, house, glowG, 314 + c * pw, 110, pw - 4, 14, R(0.4, 0.62), false);
-    win(ctx, house, glowG, 314 + c * pw, 127, pw - 4, 60, R(0.4, 0.62), false);
+    const px = 312 + c * pw + bar / 2;
+    for (const [py, ph] of [[114, 13], [133, 53]]) { win(ctx, house, glowG, px, py, pw - bar, ph, R(0.4, 0.62), false); holes.push(box(px, py, pw - bar, ph, 0.2)); }
   }
-  const mullions: string[] = ['M312 125.5 L562 125.5'];
-  for (let c = 0; c <= cols; c++) mullions.push(`M${f(312 + c * pw)} 108 L${f(312 + c * pw)} 194`);
-  P(house, mullions.join(' '), SP * 1.6);
+  // a broad white frame: one paper band with a hole cut for every pane
+  S(house, box(312, 108, 250, 80, 0.3) + ' ' + holes.join(' '), SP * 0.8).setAttribute('fill-rule', 'evenodd');
   // reflections, so the panes read as glass rather than holes
   const glints: string[] = [];
   for (let c = 0; c < cols; c++) { const gx = 318 + c * pw; glints.push(`M${f(gx + 4)} 150 L${f(gx + 16)} 132 M${f(gx + 8)} 164 L${f(gx + 26)} 138`); }
