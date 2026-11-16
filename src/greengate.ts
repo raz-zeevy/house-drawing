@@ -89,13 +89,26 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   for (let c = 0; c < cols; c++) { const gx = 318 + c * pw; glints.push(`M${f(gx + 4)} 150 L${f(gx + 16)} 132 M${f(gx + 8)} 164 L${f(gx + 26)} 138`); }
   el('path', { d: glints.join(' '), fill: 'none', style: 'stroke: var(--paper)', 'stroke-width': 1.4, 'stroke-linecap': 'round', opacity: 0.55 }, house);
   S(house, box(306, 188, 262, 10, 0.2), SP * 0.8);
-  const pots: string[] = [], blooms: string[] = [];
-  for (let x = 316; x < 560; x += R(10, 18)) {
-    pots.push(leaf(x, 188, R(5, 8), R(3.6, 4.6), 0.45), leaf(x + 3, 188, R(4, 7), R(4.6, 5.6), 0.45));
-    if (R() < 0.5) blooms.push(`M${f(x + 2)} ${f(181)} a1.6 1.6 0 1 0 0.1 0Z`);
+  // the balcony garden: a bushy plant, a planter of red geraniums, terracotta pots, a fern on the right
+  const potted: Clump[] = [];
+  for (const [x, y, r, n] of [[334, 168, 20, 120], [346, 178, 14, 60], [506, 168, 15, 70], [548, 172, 13, 60]])
+    potted.push(clump(ctx, house, x, y, r, 'ivy', n, C.IVY, 0.8));
+  const TERRA = '#b5653f', PLANTER = '#7f8b7c';
+  tint(ctx, paint(house, PLANTER, SP * 0.8), PLANTER).setAttribute('d', box(380, 174, 52, 13, 0.3));
+  tint(ctx, paint(house, TERRA, SP * 0.8), TERRA).setAttribute('d', `M448 172 L466 172 L463 187 L451 187Z ${box(484, 175, 44, 12, 0.3)}`);
+  const stems: string[] = [], leaves: string[] = [], blooms: string[] = [];
+  for (let i = 0; i < 9; i++) { // geraniums: long stems with a red head, leaves low
+    const x = 384 + i * 5.5 + R(-1.5, 1.5), top = R(138, 160);
+    stems.push(`M${f(x)} 174 Q${f(x + R(-4, 4))} ${f((top + 174) / 2)} ${f(x + R(-3, 3))} ${f(top)}`);
+    leaves.push(leaf(x, 172, R(5, 7), R(3.4, 4.2), 0.6), leaf(x + 2, 170, R(4, 6), R(5.2, 6), 0.6));
+    blooms.push(`M${f(x)} ${f(top)} a3 2.6 0 1 0 0.1 0Z`);
   }
-  P(house, pots.join(' '), SP * 0.5);
-  tint(ctx, paint(house, K.BLOSSOM, SP * 0.3), K.BLOSSOM).setAttribute('d', blooms.join(' '));
+  for (let i = 0; i < 7; i++) leaves.push(leaf(457 + R(-4, 4), 172, R(5, 8), R(3.6, 5.8), 0.5)); // the pot's little plant
+  P(house, stems.join(' '), SP * 0.5);
+  tint(ctx, paint(house, C.IVY, SP * 0.4), C.IVY).setAttribute('d', leaves.join(' '));
+  tint(ctx, paint(house, K.BLOSSOM, SP * 0.4), K.BLOSSOM).setAttribute('d', blooms.join(' '));
+  // the balcony railing in front of the pots
+  P(house, `M308 176 L566 176 ${Array.from({ length: 22 }, (_, i) => `M${f(312 + i * 12)} 176 L${f(312 + i * 12)} 188`).join(' ')}`, SP * 0.5);
   S(house, box(296, 198, 290, 12, 0.3), SP * 1.1);
   P(house, 'M300 214 L582 214', SP * 0.4).setAttribute('opacity', '0.6');
   // barred window and a window below the balcony, mostly behind the hedge
