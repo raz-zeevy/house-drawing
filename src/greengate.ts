@@ -31,9 +31,9 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
     surface(ctx, l.g.querySelector('path')!, colour);
   };
 
-  // ---------- next door on the left: a stone house with barred windows, half behind a dense tree
+  // ---------- next door on the left: a house with barred windows, half behind a dense tree
   const nb = lay('back');
-  surface(ctx, paint(nb, K.STONE, SP), K.STONE).setAttribute('d', box(L - 4, 110, 124, 250, 0.4));
+  S(nb, box(L - 4, 110, 124, 250, 0.4)); // plain paper, so it stays quieter than the main house
   blocks(nb, L - 4, L + 120, 114, 350, 16, 40);
   S(nb, box(L - 6, 104, 130, 6, 0.2), SP * 0.8);
   for (const y of [150, 252]) {
