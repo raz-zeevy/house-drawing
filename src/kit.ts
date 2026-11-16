@@ -22,7 +22,7 @@ export interface Part {
 export const LAYERS = ['back', 'house', 'acacia', 'terrace', 'bigTree', 'right', 'hedge', 'wall', 'front', 'street', 'fall'] as const;
 export type LayerName = (typeof LAYERS)[number];
 
-/** A house on the street: how wide its lot is, and how to draw it at x0. */
+/** A house on the street: how wide its lot is (at least 1280, one desktop card, so a card never shows two houses), and how to draw it at x0. */
 export interface LotDef { name: string; width: number; build(ctx: Ctx, x0: number, drop: Drop): Lot }
 /** What a drawn lot tells the street: where the dog likes to stop and sniff. */
 export interface Lot { sniffAt?: number }

@@ -158,7 +158,7 @@ function terrace(ctx: Ctx, tr: Element): void {
 function bananaCorner(ctx: Ctx, rt: Element): void {
   S(rt, 'M770 150 L860 140 L860 286 L776 286Z', SP * 0.6);
   P(rt, Array.from({ length: 40 }, (_, i) => `M${f(772 + i * 2.2)} ${f(146 - i * 0.1)} l0 ${f(138 + i * 0.1)}`).join(' '), SP * 0.4);
-  for (const [x, y, ang, len] of [[905, 178, -150, 105], [892, 182, -122, 92], [918, 176, -96, 110], [930, 180, -66, 88], [880, 186, -172, 80]]) {
+  for (const [x, y, ang, len] of [[905, 178, -150, 105], [892, 182, -122, 92], [918, 176, -96, 110], [918, 180, -66, 80], [880, 186, -172, 80]]) {
     const g = el('g', { style: 'cursor:pointer' }, rt), w = len * 0.17;
     S(g, `M0 0 C${f(len * 0.25)} ${f(-w)} ${f(len * 0.8)} ${f(-w * 1.1)} ${len} 0 C${f(len * 0.8)} ${f(w)} ${f(len * 0.25)} ${f(w * 0.9)} 0 0Z`, SP * 0.8);
     const veins: string[] = [`M0 0 Q${f(len / 2)} -1 ${len} 0`];
@@ -168,10 +168,10 @@ function bananaCorner(ctx: Ctx, rt: Element): void {
     g.addEventListener('pointerdown', () => p.kick((Math.random() - 0.5) * 3));
     ctx.add({ step: ({ t, dt, wind }) => g.setAttribute('transform', `translate(${x} ${y}) rotate(${f(ang + p.step(wind * 0.4 * (len / 100) + wobble(t * 0.7 + x) * 0.08, dt) * 57.3 * 0.6)})`) });
   }
-  S(rt, 'M846 150 Q904 146 964 148 L964 236 L846 236Z');
-  P(rt, Array.from({ length: 18 }, (_, i) => `M${f(852.5 + i * 6.5)} ${f(149 + ctx.rand(-0.6, 0.6))} L${f(852.5 + i * 6.5 + ctx.rand(-0.4, 0.4))} 236`).join(' '), SP * 0.45);
-  S(rt, box(846, 236, 118, 44));
-  blocks(rt, 846, 964, 236, 280, 22, 34);
+  S(rt, 'M846 150 Q902 146 958 148 L958 236 L846 236Z');
+  P(rt, Array.from({ length: 17 }, (_, i) => `M${f(852.5 + i * 6.5)} ${f(149 + ctx.rand(-0.6, 0.6))} L${f(852.5 + i * 6.5 + ctx.rand(-0.4, 0.4))} 236`).join(' '), SP * 0.45);
+  S(rt, box(846, 236, 112, 44));
+  blocks(rt, 846, 958, 236, 280, 22, 34);
 }
 
 /** Ivy hedge with the black railing showing through. Returns the hedge group (click target). */
@@ -258,8 +258,8 @@ function walls(ctx: Ctx, wl: Element, ws: Element): void {
     },
   });
 
-  S(ws, box(793, 280, 170, 124));
-  blocks(ws, 793, 963, 280, 404, 18, 34);
+  S(ws, box(793, 280, 164, 124));
+  blocks(ws, 793, 957, 280, 404, 18, 34);
   blot(ws).setAttribute('d', box(826, 322, 4, 4, 0.1));
   S(ws, box(896, 286, 26, 11), SP * 0.6);
   P(ws, 'M900 291 q2 -2 4 0 t4 0 t4 0 t4 0', SP * 0.4);

@@ -9,7 +9,9 @@ import { seeded, spring, wobble, clamp } from '../lib/motion.ts';
 import type { Drop } from './falls.ts';
 import { type Ctx, type Clump, type LotDef, C, H, SP, P, S, at, box, blocks, clump, leaf, surface, tint, win } from './kit.ts';
 
-const WIDTH = 1100;
+// The drawing spans 0..1104; the lot is one desktop card wide (1280) so a card never shows two houses,
+// with the walls carried on through the PAD on each side.
+const WIDTH = 1280, PAD = 88, L = -PAD, R1 = WIDTH - PAD;
 const K = {
   STONE: '#ece1c8', ROOF: '#8b6f60', GREEN: '#3f8a52', WOOD: '#a47c50', BLUE: '#9db3db', BLOSSOM: '#c9563c',
   YELLOW: '#e2b53a', PLATE: '#3d5a8c', CABINET: '#c7c9c4', SIGN: '#2f62b0',
@@ -22,7 +24,7 @@ export const greenGateLot: LotDef = {
 };
 
 function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
-  const R = ctx.rand, lay = (name: keyof Ctx['layers']) => at(ctx.layers[name], x0), glowG = at(ctx.glow, x0);
+  const R = ctx.rand, lay = (name: keyof Ctx['layers']) => at(ctx.layers[name], x0 + PAD), glowG = at(ctx.glow, x0 + PAD);
   const tube = (g: Element, pts: Vec[], w: number, colour: string) => {
     const l = limb(g, w, SP * 0.55);
     l.draw(pts, [0, 0]);
@@ -115,8 +117,8 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
 
   // ---------- walls, the pedestrian gate, the driveway gate
   const wl = lay('wall');
-  S(wl, box(-2, 350, 198, 54));
-  blocks(wl, -2, 196, 350, 404, 18, 40);
+  S(wl, box(L - 2, 350, 198 + PAD, 54));
+  blocks(wl, L - 2, 196, 350, 404, 18, 40);
   S(wl, box(236, 352, 326, 52));
   blocks(wl, 236, 562, 352, 404, 17, 42);
   S(wl, box(562, 334, 428, 70));
@@ -152,11 +154,13 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   for (const pts of [[[990, 298], [1082, 298]], [[990, 340], [1082, 340]], [[990, 400], [1082, 400]], [[991, 298], [991, 404]], [[1036, 298], [1036, 404]], [[1081, 298], [1081, 404]]] as Vec[][]) tube(wl, pts, 2.6, K.GREEN);
   for (let x = 998; x < 1080; x += 7.6) if (Math.abs(x - 1036) > 3) tube(wl, [[x, 300], [x, 398]], 1.3, K.GREEN);
   S(wl, box(1082, 226, 22, 178, 0.3));
+  S(wl, box(1104, 344, R1 - 1102, 60));
+  blocks(wl, 1104, R1 + 2, 344, 404, 15, 40);
   tint(ctx, paint(wl, K.SIGN, SP * 0.5), K.SIGN).setAttribute('d', 'M955 352 a10 10 0 1 0 0.1 0Z');
   tint(ctx, el('path', { d: 'M955 352 a10 10 0 1 0 0.1 0Z M948 355 L962 369', fill: 'none', stroke: K.BLOSSOM, 'stroke-width': 2.2 }, wl), K.BLOSSOM, 'stroke');
   // red-and-white kerb along the lot (seen on zoomed-out phones)
   const kerb: string[] = [];
-  for (let x = 0; x < WIDTH; x += 60) kerb.push(box(x, H, 30, 6, 0.1));
+  for (let x = L; x < R1; x += 60) kerb.push(box(x, H, 30, 6, 0.1));
   tint(ctx, paint(wl, K.BLOSSOM, SP * 0.4), K.BLOSSOM).setAttribute('d', kerb.join(' '));
 
   // ---------- in front: the pole with its yellow climber and wires, the electrical cabinet
@@ -178,9 +182,9 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   ctx.add({
     step({ t, wind }) {
       const sag = (base: number, k: number) => base + wind * 4 * k + wobble(t * 0.6 + k * 3) * 1.6;
-      wires[0].setAttribute('d', `M-4 ${f(-30)} Q74 ${f(sag(-6, 1))} 148 -60`);
-      wires[1].setAttribute('d', `M148 -54 Q620 ${f(sag(40, 1.4))} ${WIDTH + 4} 0`);
-      wires[2].setAttribute('d', `M148 -44 Q620 ${f(sag(58, 1.2))} ${WIDTH + 4} 14`);
+      wires[0].setAttribute('d', `M${L - 4} ${f(-30)} Q30 ${f(sag(-6, 1))} 148 -60`);
+      wires[1].setAttribute('d', `M148 -54 Q620 ${f(sag(40, 1.4))} ${R1 + 4} 0`);
+      wires[2].setAttribute('d', `M148 -44 Q620 ${f(sag(58, 1.2))} ${R1 + 4} 14`);
     },
   });
   surface(ctx, paint(fr, K.CABINET, SP), K.CABINET).setAttribute('d', box(26, 360, 104, 58, 0.4));
@@ -198,5 +202,5 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
     el('path', { d, fill: 'none', style: 'stroke: var(--paper)', 'stroke-width': 1.1, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'pointer-events': 'none' }, fall);
   }
 
-  return { sniffAt: x0 + 150 };
+  return { sniffAt: x0 + PAD + 150 };
 }

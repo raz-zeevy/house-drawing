@@ -2,7 +2,7 @@
 // houses), the viewBox becomes a window of the stage's own shape. It follows a target
 // (the dog), or with `pages` (house extents) it keeps to one house at a time: inside a house wider
 // than the window you pan freely, and swiping past its edge moves to the neighbour. Swipe or drag pans it; pinch
-// widens it up to 1.8 street-heights tall, the extra going mostly to sky, some to road;
+// widens it up to 1.8 street-heights tall (and never past one house's width with pages), the extra going mostly to sky, some to road;
 // `goTo(x)` glides to a spot and stays there until the next swipe. On load it opens close in
 // and then eases out to the widest view, unless a touch gets there first.
 import { f } from '../lib/ink.ts';
@@ -18,17 +18,19 @@ export function camera(svg: SVGSVGElement, stage: HTMLElement, width: number, on
   let intro = true, introFrom: number | null = null, fitW = width, maxW = width, aspect = 1, viewW = 0, camX = 0, swipedAt = -99, now = 0, dragX: number | null = null, aim: number | null = null, dragFrom = 0;
   const narrow = () => fitW < width - 1;
   const full: View = { x: 0, y: 0, w: width, h: H };
+  const pageW = pages ? Math.min(...pages.map(([a, b]) => b - a)) : Infinity;
   function fit(): void {
     const r = stage.getBoundingClientRect();
     aspect = r.width && r.height ? r.height / r.width : H / width;
-    fitW = Math.min(width, H / aspect);
-    maxW = Math.min(width, (1.8 * H) / aspect);
+    // with pages the window never spans more than one house; a card wider than that crops a little sky and road
+    fitW = Math.min(width, pageW, H / aspect);
+    maxW = Math.min(width, pageW, (1.8 * H) / aspect);
     viewW = clamp(viewW, fitW, maxW);
     if (!narrow()) svg.setAttribute('viewBox', `0 0 ${width} ${H}`);
     onFit(narrow());
   }
   fit();
-  addEventListener('resize', fit);
+  new ResizeObserver(() => fit()).observe(stage); // the card can settle after first layout, not only on window resize
 
   const touches = new Map<number, number>(); // pointerId -> clientX
   let pinch: { d: number; w: number } | null = null;
@@ -93,7 +95,7 @@ export function camera(svg: SVGSVGElement, stage: HTMLElement, width: number, on
       if (aim !== null) camX += (clamp(aim, 0, width - viewW) - camX) * Math.min(1, dt * 2.5);
       else if (!pages && t - swipedAt > 4) camX += (clamp(followX - viewW * 0.4, 0, width - viewW) - camX) * Math.min(1, dt * 0.8);
       camX = clamp(camX, 0, width - viewW);
-      const h = Math.max(H, viewW * aspect), y = -(h - H) * 0.6;
+      const h = viewW * aspect, y = -(h - H) * 0.6;
       svg.setAttribute('viewBox', `${f(camX)} ${f(y)} ${f(viewW)} ${f(h)}`);
       return { x: camX, y, w: viewW, h };
     },
