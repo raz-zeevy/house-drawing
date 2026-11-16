@@ -18,7 +18,7 @@ const K = {
 } as const;
 
 export const greenGateLot: LotDef = {
-  name: 'The house with the green gate',
+  name: 'Meir Shacham 3',
   width: WIDTH,
   build: (ctx, x0, drop) => build({ ...ctx, rand: seeded(303) }, x0, drop),
 };
