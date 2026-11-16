@@ -8,6 +8,7 @@ import { el, pen, paint, limb, hang, f, type Vec } from '../lib/ink.ts';
 import { seeded, spring, wobble, clamp } from '../lib/motion.ts';
 import type { Drop } from './falls.ts';
 import { lady } from './lady.ts';
+import { birds } from './birds.ts';
 import { type Ctx, type Clump, type LotDef, C, GROUND, H, SP, P, S, at, box, blocks, clump, leaf, surface, tint, win } from './kit.ts';
 
 // The drawing spans 0..1104; the lot is one desktop card wide (1280) so a card never shows two houses,
@@ -249,12 +250,14 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   }
   fr.style.cursor = 'pointer';
   const wires = [pen(fr, SP * 0.7), pen(fr, SP * 0.7), pen(fr, SP * 0.6)];
+  let low = 58; // the lowest wire's sag, which the birds ride
   ctx.add({
     step({ t, wind }) {
       const sag = (base: number, k: number) => base + wind * 4 * k + wobble(t * 0.6 + k * 3) * 1.6;
       wires[0].setAttribute('d', `M${L - 4} ${f(-30)} Q30 ${f(sag(-6, 1))} 148 -60`);
       wires[1].setAttribute('d', `M148 -54 Q620 ${f(sag(40, 1.4))} ${R1 + 4} 0`);
-      wires[2].setAttribute('d', `M148 -44 Q620 ${f(sag(58, 1.2))} ${R1 + 4} 14`);
+      low = sag(58, 1.2);
+      wires[2].setAttribute('d', `M148 -44 Q620 ${f(low)} ${R1 + 4} 14`);
     },
   });
   surface(ctx, paint(fr, K.CABINET, SP), K.CABINET).setAttribute('d', box(26, 360, 104, 58, 0.4));
@@ -262,7 +265,12 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   S(fr, box(88, 370, 18, 12, 0.1), SP * 0.4);
   S(fr, box(108, 372, 14, 10, 0.1), SP * 0.4);
   P(fr, 'M40 384 q6 -8 10 0 t10 -2 M44 396 l6 -6 l4 8 l6 -6', SP * 0.4).setAttribute('opacity', '0.45');
-  fr.addEventListener('pointerdown', (e) => { climber.forEach((c) => c.shake()); drop(e, 8, [K.YELLOW, K.YELLOW, C.IVY]); });
+  // doves and green parakeets on the lowest wire
+  const flock = birds(ctx, fr, [
+    { kind: 'dove', s: 0.48, dir: 1 }, { kind: 'dove', s: 0.53, dir: -1 }, { kind: 'parakeet', s: 0.61, dir: 1 },
+    { kind: 'parakeet', s: 0.645, dir: -1 }, { kind: 'parakeet', s: 0.68, dir: 1 }, { kind: 'dove', s: 0.75, dir: 1 }, { kind: 'parakeet', s: 0.83, dir: -1 },
+  ], (u) => [(1 - u) ** 2 * 148 + 2 * u * (1 - u) * 620 + u * u * (R1 + 4), (1 - u) ** 2 * -44 + 2 * u * (1 - u) * low + u * u * 14]);
+  fr.addEventListener('pointerdown', (e) => { climber.forEach((c) => c.shake()); flock.startle(); drop(e, 8, [K.YELLOW, K.YELLOW, C.IVY]); });
 
   // ---------- on the pavement, in front of whoever walks by: metal barriers
   lady(ctx, lay('street'), GROUND + 16, R1 + 60, L - 60); // walks slowly by, right to left
