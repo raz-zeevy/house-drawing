@@ -5,12 +5,14 @@ import { el, limb, paint, f, type Vec } from '../lib/ink.ts';
 import { seeded } from '../lib/motion.ts';
 import type { Drop } from './falls.ts';
 import { type Ctx, type LotDef, type Clump, C, SP, P, S, at, box, blocks, clump, fillPath, strand, tint, win } from './kit.ts';
+import { ALFEI_MENASHE } from './places.ts';
 
 const ACCENTS = ['#5d6f8a', '#7a8c5a', '#b0763c', '#8e3b2c'];
 
+/** A stand-in neighbour of the Alfei Menashe house. */
 export function neighbourLot(seed: number, name: string): LotDef {
   const r = seeded(seed * 7919 + 13), width = Math.round(r(720, 980));
-  return { name, width, build: (ctx, x0, drop) => build({ ...ctx, rand: seeded(seed * 31 + 5) }, x0, width, drop) };
+  return { name, width, place: ALFEI_MENASHE, build: (ctx, x0, drop) => build({ ...ctx, rand: seeded(seed * 31 + 5) }, x0, width, drop) };
 }
 
 function build(ctx: Ctx, x0: number, width: number, drop: Drop): { sniffAt: number } {

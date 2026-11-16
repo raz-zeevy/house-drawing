@@ -9,6 +9,7 @@ import { seeded, spring, wobble, clamp } from '../lib/motion.ts';
 import type { Drop } from './falls.ts';
 import { lady } from './lady.ts';
 import { birds } from './birds.ts';
+import { JERUSALEM } from './places.ts';
 import { type Ctx, type Clump, type LotDef, C, GROUND, H, SP, P, S, at, box, blocks, clump, leaf, surface, tint, win } from './kit.ts';
 
 // The drawing spans 0..1104; the lot is one desktop card wide (1280) so a card never shows two houses,
@@ -22,6 +23,7 @@ const K = {
 export const greenGateLot: LotDef = {
   name: 'Meir Shacham 3',
   width: WIDTH,
+  place: JERUSALEM,
   build: (ctx, x0, drop) => build({ ...ctx, rand: seeded(303) }, x0, drop),
 };
 

@@ -1,7 +1,8 @@
 // Mounts a street of lots into a stage: sky, pavement and road, the houses side by
 // side, the animals, the camera, then one loop: time of day, wind, every part's step,
-// palette repaints only when the time has moved. URL flags: ?tau=0.5 pins the time of
-// day, ?start=0.6 sets the starting time, ?day=180 the seconds per day, ?t and ?debug as in lib/ink.
+// palette repaints only when the time has moved. The clock is the houses' own local time,
+// and the sky follows the real sunrise and sunset where the house in view stands. URL
+// flags: ?tau=0.5 pins the clock time (0 midnight, 0.5 noon), ?start=0.6 sets the starting time, ?day=180 the seconds per day, ?t and ?debug as in lib/ink.
 import { el, inkDefs, run, PAPER } from '../lib/ink.ts';
 import { pointerWind, seeded } from '../lib/motion.ts';
 import { palette, applyPalette, type Palette } from '../lib/daynight.ts';
@@ -11,6 +12,7 @@ import { falls } from './falls.ts';
 import { sky } from './sky.ts';
 import { camera, type Camera, type View } from './camera.ts';
 import { clock } from './clock.ts';
+import { localTime } from './sun.ts';
 import { beagle } from './beagle.ts';
 
 const REPAINT_EVERY = 0.0005; // of a day: about 43 s of scene time
@@ -32,8 +34,8 @@ export interface StreetOptions {
 
 export function mountStreet({ stage, lots, label, paged, onFit, onView, onPaint }: StreetOptions): { camera: Camera; placed: Placed[]; width: number } {
   const q = new URLSearchParams(location.search);
-  const d = new Date(), nowTau = (d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds()) / 86400;
-  // Real time by default (the visitor's local clock, one day per day); ?start / ?day / ?tau override.
+  const nowTau = localTime(new Date(), lots[0].place.timeZone).tau;
+  // Real time by default (the houses' local clock, one day per day); ?start / ?day / ?tau override.
   const time = clock({ start: Number(q.get('start') ?? nowTau), day: Number(q.get('day') ?? 86400), pinned: q.has('tau') ? Number(q.get('tau')) : null });
   const placed: Placed[] = [];
   let width = 0;
@@ -69,9 +71,11 @@ export function mountStreet({ stage, lots, label, paged, onFit, onView, onPaint 
   const cam = camera(svg, stage, width, onFit ?? (() => {}), paged ? placed.map((p): [number, number] => [p.x0, p.x0 + p.width]) : undefined);
 
   const wind = pointerWind(svg, 0.3);
-  let painted = -1;
+  let painted = -1, centre = 0;
+  const lotAt = (x: number) => lots[placed.reduce((at, p, i) => (p.x0 <= x ? i : at), 0)];
   // start after returning, so callers can wire up their UI before the first onView
   queueMicrotask(() => run((t, dt) => {
+    time.at(lotAt(centre).place); // the sun of the house in view
     const tau = time.tau(t), pal = palette(tau), fr = { t, dt, wind: wind.step(t), tau, pal };
     if (Math.abs(tau - painted) > REPAINT_EVERY) {
       painted = tau;
@@ -83,6 +87,7 @@ export function mountStreet({ stage, lots, label, paged, onFit, onView, onPaint 
     for (const p of parts) p.step?.(fr);
     animals.step(t, dt, fr.wind);
     const view = cam.step(t, dt, animals.x());
+    centre = view.x + view.w / 2;
     heavens.place(view, tau, pal);
     onView?.(view);
   }));

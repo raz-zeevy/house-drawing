@@ -9,10 +9,11 @@ import { spring, pendulum, clamp, wobble } from '../lib/motion.ts';
 import { mix, rgb } from '../lib/daynight.ts';
 import { type Ctx, type Clump, type Strand, type Win, type LayerName, type Lot, type LotDef, C, GLASS, WARM, SP, P, S, at, box, blocks, clump, fillPath, leaf, strand, tint, win } from './kit.ts';
 import type { Drop } from './falls.ts';
+import { ALFEI_MENASHE } from './places.ts';
 
 const OX = 320; // the gate-side photo starts here
 
-export const homeLot: LotDef = { name: 'Arbel 189', width: 1280, build: (ctx, x0, drop) => home(ctx, x0, drop) };
+export const homeLot: LotDef = { name: 'Arbel 189', width: 1280, place: ALFEI_MENASHE, build: (ctx, x0, drop) => home(ctx, x0, drop) };
 
 function home(ctx: Ctx, x0: number, drop: Drop): Lot {
   const lay = (name: LayerName, dx = 0) => at(ctx.layers[name], x0 + dx);
