@@ -203,10 +203,10 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   const PAVERS = ['#bdb7ad', '#928d87', '#d9c7a2', '#75716d', '#a89a86'];
   const shades: string[][] = PAVERS.map(() => []), off = (x0 + PAD) % 14;
   for (let r = 0; r < 5; r++) for (let x = (r % 2 ? 7 : 0) - off - 112; x + 14 <= R1; x += 14) {
-    if (x < L || R() < 0.3) continue;
+    if (x < L || R() < 0.45) continue;
     shades[Math.floor(R(0, PAVERS.length))].push(`M${f(x + 0.6)} ${f(GROUND + r * 7 + 0.6)} h12.8 v5.8 h-12.8Z`);
   }
-  PAVERS.forEach((c, i) => surface(ctx, el('path', { d: shades[i].join(' ') }, wl), c));
+  PAVERS.forEach((c, i) => surface(ctx, el('path', { d: shades[i].join(' '), opacity: 0.28 }, wl), c)); // only a faint patchwork
 
   // ---------- in front: the pole with its yellow climber and wires, the electrical cabinet
   const fr = lay('front');
