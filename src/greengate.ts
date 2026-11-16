@@ -193,6 +193,15 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   S(wl, box(1082, 226, 22, 178, 0.3));
   S(wl, box(1104, 344, R1 - 1102, 60));
   blocks(wl, 1104, R1 + 2, 344, 404, 15, 40);
+  // the lot next door is a building site: corrugated metal hoarding on top of the wall, with notices
+  for (const [a, b, top] of [[1106, 1150, 238], [1150, R1 + 2, 254]]) {
+    surface(ctx, paint(wl, '#a9aca8', SP), '#a9aca8').setAttribute('d', box(a, top, b - a, 344 - top, 0.3));
+    P(wl, Array.from({ length: Math.floor((b - a) / 5) }, (_, i) => `M${f(a + 3 + i * 5)} ${top + 1} L${f(a + 3 + i * 5)} 343`).join(' '), SP * 0.35).setAttribute('opacity', '0.7');
+  }
+  for (const [x, y] of [[1120, 268], [1172, 280]]) {
+    S(wl, box(x, y, 9, 10, 0.1), SP * 0.4);
+    tint(ctx, paint(wl, K.SIGN, SP * 0.2), K.SIGN).setAttribute('d', `M${x + 4.5} ${y + 4} a2.6 2.6 0 1 0 0.1 0Z`);
+  }
   tint(ctx, paint(wl, K.SIGN, SP * 0.5), K.SIGN).setAttribute('d', 'M955 352 a10 10 0 1 0 0.1 0Z');
   tint(ctx, el('path', { d: 'M955 352 a10 10 0 1 0 0.1 0Z M948 355 L962 369', fill: 'none', stroke: K.BLOSSOM, 'stroke-width': 2.2 }, wl), K.BLOSSOM, 'stroke');
   // red-and-white kerb along the lot (seen on zoomed-out phones)
