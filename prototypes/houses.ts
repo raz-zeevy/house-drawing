@@ -6,8 +6,9 @@ import { mountStreet } from '../src/app.ts';
 import { stage } from './lots.ts';
 import { homeLot } from '../src/home.ts';
 import { greenGateLot } from '../src/greengate.ts';
+import { herzlLot } from '../src/herzl.ts';
 
-const LOTS = [homeLot, greenGateLot];
+const LOTS = [homeLot, greenGateLot, herzlLot];
 import { plan } from './plan.ts';
 import { rgb } from '../lib/daynight.ts';
 
