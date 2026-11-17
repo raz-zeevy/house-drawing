@@ -7,10 +7,10 @@
 import { el, pen, paint, limb, hang, f, type Vec } from '../lib/ink.ts';
 import { seeded, spring, wobble, clamp } from '../lib/motion.ts';
 import type { Drop } from './falls.ts';
-import { lady, oraAtWindow } from './lady.ts';
+import { lady, oraAtWindow, type OraWindow } from './lady.ts';
 import { birds } from './birds.ts';
 import { JERUSALEM } from './places.ts';
-import { type Ctx, type Clump, type LotDef, C, GROUND, H, SP, P, S, at, box, blocks, clump, leaf, surface, tint, win } from './kit.ts';
+import { type Ctx, type Clump, type LotDef, type Win, C, GROUND, H, SP, P, S, at, box, blocks, clump, leaf, surface, tint, win } from './kit.ts';
 
 // The drawing spans 0..1104; the lot is one desktop card wide (1280) so a card never shows two houses,
 // with the walls carried on through the PAD on each side.
@@ -84,9 +84,16 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   S(house, box(294, 78, 402, 7, 0.2), SP * 0.9);
   // enclosed balcony: a row of transoms over a row of tall panes, flower boxes on the sill
   const cols = 6, pw = 250 / cols, bar = 6, holes: string[] = [];
+  let ora: OraWindow | undefined, transom: Win | undefined;
   for (let c = 0; c < cols; c++) {
     const px = 312 + c * pw + bar / 2;
-    for (const [py, ph] of [[98, 12], [116, 70]]) { win(ctx, house, glowG, px, py, pw - bar, ph, R(0.4, 0.62), false); holes.push(box(px, py, pw - bar, ph, 0.2)); }
+    for (const [py, ph] of [[98, 12], [116, 70]]) {
+      const w = win(ctx, house, glowG, px, py, pw - bar, ph, R(0.4, 0.62), false);
+      holes.push(box(px, py, pw - bar, ph, 0.2));
+      // Ora's pane: the fourth, behind the small pot, so the frame and plants come in front of her
+      if (c === 3 && py === 98) transom = w;
+      if (c === 3 && py === 116) ora = oraAtWindow(ctx, house, [transom!, w], px + (pw - bar) / 2, 172, 0.85);
+    }
   }
   // a broad white frame: one paper band with a hole cut for every pane
   S(house, box(312, 92, 250, 96, 0.3) + ' ' + holes.join(' '), SP * 0.8).setAttribute('fill-rule', 'evenodd');
@@ -121,8 +128,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   win(ctx, house, glowG, 604, 112, 56, 70, 0.5);
   P(house, Array.from({ length: 7 }, (_, i) => `M${611 + i * 7} 112 L${611 + i * 7} 182`).join(' '), SP * 0.9);
   win(ctx, house, glowG, 330, 228, 44, 46, 0.55);
-  const oraWin = win(ctx, house, glowG, 610, 226, 46, 50, 0.48);
-  const ora = oraAtWindow(ctx, house, oraWin, 633, 262, 0.75); // Ora's room: the small window on the right
+  win(ctx, house, glowG, 610, 226, 46, 50, 0.48);
 
   // ---------- the hedge: plumbago on the left, red blossom on the right
   const hd = lay('hedge');
@@ -275,7 +281,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   fr.addEventListener('pointerdown', (e) => { climber.forEach((c) => c.shake()); flock.startle(); drop(e, 8, [K.YELLOW, K.YELLOW, C.IVY]); });
 
   // ---------- on the pavement, in front of whoever walks by: metal barriers
-  lady(ctx, lay('street'), GROUND + 16, R1 + 60, L - 60, { gate: 216, window: ora }); // walks slowly by, right to left; home at night
+  lady(ctx, lay('street'), GROUND + 16, R1 + 60, L - 60, { gate: 216, window: ora! }); // walks slowly by, right to left; home at night
 
   const fall = lay('fall');
   for (const x of [300, 420, 760]) {

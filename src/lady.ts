@@ -14,8 +14,8 @@ const SCALE = 0.92, WAVE = 2.6;
 /** Ora's window at night: she's there with the light on, or the light is off. */
 export interface OraWindow { show(seen: boolean): void; reset(): void }
 
-/** Ora at a small window, seen from the street: head and shoulders at `s` scale, facing out. Draw it just after the window `w`, so whatever is in front of the window covers her too. */
-export function oraAtWindow(ctx: Ctx, parent: Element, w: Win, cx: number, by: number, s: number): OraWindow {
+/** Ora at a small window, seen from the street: head and shoulders at `s` scale, facing out. Draw it just after the window's `panes` (all switched together), so whatever is in front of the window covers her too. */
+export function oraAtWindow(ctx: Ctx, parent: Element, panes: Win[], cx: number, by: number, s: number): OraWindow {
   const g = el('g', { display: 'none', 'pointer-events': 'none', transform: `translate(${cx} ${by}) scale(${s}) translate(${-cx} ${-by})` }, parent);
   el('title', {}, g).textContent = 'Ora at her window';
   tint(ctx, paint(g, CARDIGAN, PEN * 0.6), CARDIGAN).setAttribute('d', `M${cx - 20} ${by} L${cx - 18} ${by - 13} Q${cx - 12} ${by - 20} ${cx - 4} ${by - 21} L${cx + 4} ${by - 21} Q${cx + 12} ${by - 20} ${cx + 18} ${by - 13} L${cx + 20} ${by}Z`);
@@ -27,8 +27,8 @@ export function oraAtWindow(ctx: Ctx, parent: Element, w: Win, cx: number, by: n
   pen(head, PEN * 0.4).setAttribute('d', `M${cx - 4.4} ${by - 31} a1.8 1.7 0 1 0 3.6 0 a1.8 1.7 0 1 0 -3.6 0 M${cx + 0.8} ${by - 31} a1.8 1.7 0 1 0 3.6 0 a1.8 1.7 0 1 0 -3.6 0 M${cx - 0.8} ${by - 31.2} l1.6 0 M${cx - 1.4} ${by - 26.4} q1.4 0.8 2.8 0`);
   ctx.add({ step: ({ t }) => { if (g.getAttribute('display') !== 'none') head.setAttribute('transform', `rotate(${f(Math.sin(t * 0.45) * 5)} ${cx} ${by - 22})`); } });
   return {
-    show(seen) { g.setAttribute('display', seen ? '' : 'none'); w.setPower(seen ? 1 : 0); },
-    reset() { g.setAttribute('display', 'none'); w.setPower(1); },
+    show(seen) { g.setAttribute('display', seen ? '' : 'none'); panes.forEach((p) => p.setPower(seen ? 1 : 0)); },
+    reset() { g.setAttribute('display', 'none'); panes.forEach((p) => p.setPower(1)); },
   };
 }
 
