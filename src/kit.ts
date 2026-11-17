@@ -25,8 +25,13 @@ export type LayerName = (typeof LAYERS)[number];
 
 /** A house on the street: how wide its lot is (at least 1280, one desktop card, so a card never shows two houses), where it really is (its sky follows that place's sun), and how to draw it at x0. */
 export interface LotDef { name: string; width: number; place: Place; build(ctx: Ctx, x0: number, drop: Drop): Lot }
-/** What a drawn lot tells the street: where the dog likes to stop and sniff. */
-export interface Lot { sniffAt?: number }
+/** What a drawn lot tells the street: where the dog likes to stop and sniff, where he sleeps at night, and a wall top the cat can walk on (scene x). */
+export interface Lot { sniffAt?: number; bed?: Bed; wall?: { x0: number; x1: number; y: number } }
+/** The dog's bed: he goes in through the gate at `gate` after sunset; `show` puts him to sleep there or wakes him. */
+export interface Bed { gate: number; show(asleep: boolean): void }
+
+/** After the drawing's sunset and before its sunrise (the real sun times are stretched onto these). */
+export const isNight = (tau: number) => tau > 0.775 || tau < 0.255;
 
 /** Everything a house needs to draw itself into the shared street. */
 export interface Ctx {

@@ -4,10 +4,11 @@
 // bushy tree over the gate pillar, an ivy hedge on a block wall, the gate, a banana
 // plant over a slatted screen. Everything is in lot coordinates (0..WIDTH) and placed
 // at x0 on the street, so the lot can sit anywhere among other houses.
-import { el, pen, blot, paint, limb, f, type Vec } from '../lib/ink.ts';
+import { el, pen, blot, paint, shape, limb, f, type Vec } from '../lib/ink.ts';
 import { spring, pendulum, clamp, wobble } from '../lib/motion.ts';
 import { mix, rgb } from '../lib/daynight.ts';
-import { type Ctx, type Clump, type Strand, type Win, type LayerName, type Lot, type LotDef, C, GLASS, WARM, SP, P, S, at, box, blocks, clump, fillPath, leaf, strand, tint, win } from './kit.ts';
+import { TAN, EAR } from './beagle.ts';
+import { type Ctx, type Clump, type Strand, type Win, type LayerName, type Lot, type LotDef, type Bed, C, GLASS, WARM, SP, P, S, at, box, blocks, clump, fillPath, leaf, strand, tint, win } from './kit.ts';
 import type { Drop } from './falls.ts';
 import { ALFEI_MENASHE } from './places.ts';
 
@@ -81,7 +82,7 @@ function home(ctx: Ctx, x0: number, drop: Drop): Lot {
   });
   ac.style.cursor = 'pointer';
 
-  terrace(ctx, lay('terrace'));
+  const show = terrace(ctx, lay('terrace'));
 
   // ---------- bushy tree over the gate
   const bt = lay('bigTree', OX);
@@ -105,7 +106,9 @@ function home(ctx: Ctx, x0: number, drop: Drop): Lot {
   ac.addEventListener('pointerdown', (e) => { acacia.forEach((c) => c.shake()); fronds.forEach((s) => s.kick(Math.random() * 2 - 0.6)); drop(e, 7, [C.FROND]); });
   hedge.addEventListener('pointerdown', () => tendrils.forEach((s) => s.kick(Math.random() * 3 - 1.5)));
 
-  return { sniffAt: x0 + OX + 650 };
+  // Toto goes in through the gate at night and sleeps in the hammock; Angel walks the wall top
+  const bed: Bed = { gate: x0 + OX + 708, show };
+  return { sniffAt: x0 + OX + 650, bed, wall: { x0: x0 + OX - 126, x1: x0 + OX + 520, y: 344 } };
 }
 
 /** Roller shutter over a window; it starts almost closed and dims the window's glow. Returns the toggle. */
@@ -128,8 +131,11 @@ function shutter(ctx: Ctx, house: Element, w: Win): () => void {
   return () => { aim = aim > 0.5 ? 0.04 : 0.96; };
 }
 
-/** Terrace: parasol, a hammock that swings in the wind (click to push it), two chairs, railing. */
-function terrace(ctx: Ctx, tr: Element): void {
+const oval = (cx: number, cy: number, rx: number, ry: number) => `M${f(cx - rx)} ${f(cy)} a${f(rx)} ${f(ry)} 0 1 0 ${f(2 * rx)} 0 a${f(rx)} ${f(ry)} 0 1 0 ${f(-2 * rx)} 0Z`;
+
+/** Terrace: parasol, a hammock that swings in the wind (click to push it), two chairs, railing.
+ *  At night Toto sleeps curled up in the hammock; the returned function shows or hides him. */
+function terrace(ctx: Ctx, tr: Element): (asleep: boolean) => void {
   P(tr, 'M268 236 L268 344', SP * 0.9);
   tint(ctx, paint(tr, C.GREY, SP * 0.8), C.GREY).setAttribute('d', 'M226 290 Q248 262 268 234 Q288 262 310 290 Q268 284 226 290Z');
   P(tr, 'M268 234 L246 288 M268 234 L290 288', SP * 0.5);
@@ -138,6 +144,14 @@ function terrace(ctx: Ctx, tr: Element): void {
   const ropes = pen(g, SP * 0.4);
   const bed = el('path', { fill: ctx.stripes, stroke: 'currentColor', 'stroke-width': SP * 0.7, 'stroke-linejoin': 'round' }, g);
   el('title', {}, g).textContent = 'Hammock';
+  // Toto asleep: lying on his side, head on his paws, ear flopped, tail curled over
+  const toto = el('g', { display: 'none' }, g);
+  const tBody = shape(toto, SP), tSaddle = blot(toto), tRump = tint(ctx, paint(toto, TAN, SP * 0.6), TAN);
+  const tTail = pen(toto, SP * 0.9), tPaws = shape(toto, SP * 0.7), tHead = tint(ctx, paint(toto, TAN, SP * 0.8), TAN);
+  const tMuzzle = shape(toto, SP * 0.7), tNose = blot(toto), tEar = tint(ctx, paint(toto, EAR, SP * 0.6), EAR), tEye = pen(toto, SP * 0.6);
+  const zs = [0, 1, 2].map(() => el('text', { 'font-size': 7, 'font-family': "'Architects Daughter', Georgia, serif", fill: 'currentColor', 'pointer-events': 'none' }, toto));
+  zs.forEach((z) => { z.textContent = 'z'; });
+  let asleep = false;
   const swing = pendulum(3.2, 0.35);
   g.addEventListener('pointerdown', () => swing.kick(1.6));
   blot(tr).setAttribute('d', 'M306 314 l2 0 l0 16 l10 0 l0 14 l-2 0 l0 -10 l-8 0 l0 10 l-2 0Z M320 316 l2 0 l0 14 l9 0 l0 14 l-2 0 l0 -10 l-7 0 l0 10 l-2 0Z');
@@ -146,13 +160,33 @@ function terrace(ctx: Ctx, tr: Element): void {
   P(tr, rail.join(' '), SP * 0.8);
   P(tr, 'M188 288 Q260 287 334 288 M190 286 L190 344 M262 287 L262 344 M332 287 L332 344', SP * 1.5);
   ctx.add({
-    step({ dt, wind }) {
+    step({ t, dt, wind }) {
       const a = swing.step(wind * 0.12, dt), A: Vec = [198, 293], B: Vec = [312, 295];
       const e1: Vec = [216 + a * 5, 306 - Math.abs(a) * 2], e2: Vec = [296 + a * 5, 308 - Math.abs(a) * 2], m: Vec = [256 + a * 14, 330 - Math.abs(a) * 6];
       ropes.setAttribute('d', [0, 2.5, 5].map((o) => `M${f(A[0])} ${f(A[1])} L${f(e1[0])} ${f(e1[1] + o)} M${f(B[0])} ${f(B[1])} L${f(e2[0])} ${f(e2[1] + o)}`).join(' '));
       bed.setAttribute('d', `M${f(e1[0])} ${f(e1[1])} Q${f(m[0])} ${f(m[1])} ${f(e2[0])} ${f(e2[1])} L${f(e2[0])} ${f(e2[1] + 5)} Q${f(m[0])} ${f(m[1] + 9)} ${f(e1[0])} ${f(e1[1] + 5)}Z`);
+      if (!asleep) return;
+      // he rides the lowest point of the hammock and breathes slowly
+      const px = (e1[0] + 2 * m[0] + e2[0]) / 4, py = (e1[1] + 2 * m[1] + e2[1]) / 4 + 1, br = Math.sin(t * 1.6) * 0.5;
+      toto.setAttribute('transform', `translate(${f(px)} ${f(py)}) scale(1.35) translate(${f(-px)} ${f(-py)})`); // the hammock is small; he reads better a bit larger
+      tBody.setAttribute('d', oval(px + 2, py - 5 - br * 0.5, 13, 5.4 + br));
+      tSaddle.setAttribute('d', `M${f(px - 6)} ${f(py - 9.6 - br)} Q${f(px + 3)} ${f(py - 12 - br * 1.4)} ${f(px + 12)} ${f(py - 8.6 - br)} Q${f(px + 4)} ${f(py - 6.4)} ${f(px - 6)} ${f(py - 9.6 - br)}Z`);
+      tRump.setAttribute('d', oval(px + 11, py - 4.6, 4.6, 3.8 + br * 0.5));
+      tTail.setAttribute('d', `M${f(px + 14)} ${f(py - 6)} Q${f(px + 15)} ${f(py - 13)} ${f(px + 6)} ${f(py - 12.6 - br)}`);
+      tPaws.setAttribute('d', `${oval(px - 15, py - 0.8, 2.4, 1.2)} ${oval(px - 11.4, py - 0.4, 2.4, 1.2)}`);
+      tHead.setAttribute('d', oval(px - 12, py - 4.4, 4.6, 3.4));
+      tMuzzle.setAttribute('d', `M${f(px - 14)} ${f(py - 5.6)} Q${f(px - 19.6)} ${f(py - 5.4)} ${f(px - 20)} ${f(py - 3)} Q${f(px - 19)} ${f(py - 1.6)} ${f(px - 14.6)} ${f(py - 2)}Z`);
+      tNose.setAttribute('d', oval(px - 19.8, py - 4, 0.9, 0.8));
+      tEye.setAttribute('d', `M${f(px - 14.6)} ${f(py - 5.4)} q1.1 0.9 2.2 0`);
+      tEar.setAttribute('d', `M${f(px - 10.4)} ${f(py - 7.4)} Q${f(px - 7)} ${f(py - 5)} ${f(px - 8)} ${f(py - 0.6)} Q${f(px - 10.4)} ${f(py - 2.6)} ${f(px - 12)} ${f(py - 6.4)}Z`);
+      zs.forEach((z, i) => {
+        const k = (t / 3 + i / 3) % 1; // each z drifts up and fades, one after another
+        z.setAttribute('x', f(px - 14 + k * 9 + i)); z.setAttribute('y', f(py - 12 - k * 16));
+        z.setAttribute('font-size', f(5 + k * 4)); z.setAttribute('opacity', f(Math.sin(Math.PI * k)));
+      });
     },
   });
+  return (on) => { asleep = on; toto.setAttribute('display', on ? '' : 'none'); };
 }
 
 /** Right corner: a slatted screen, banana leaves on pendulums (click to rock them), boards on a block band. */

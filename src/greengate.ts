@@ -7,7 +7,7 @@
 import { el, pen, paint, limb, hang, f, type Vec } from '../lib/ink.ts';
 import { seeded, spring, wobble, clamp } from '../lib/motion.ts';
 import type { Drop } from './falls.ts';
-import { lady } from './lady.ts';
+import { lady, oraAtWindow } from './lady.ts';
 import { birds } from './birds.ts';
 import { JERUSALEM } from './places.ts';
 import { type Ctx, type Clump, type LotDef, C, GROUND, H, SP, P, S, at, box, blocks, clump, leaf, surface, tint, win } from './kit.ts';
@@ -119,6 +119,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   P(house, 'M300 214 L582 214', SP * 0.4).setAttribute('opacity', '0.6');
   // barred window and a window below the balcony, mostly behind the hedge
   win(ctx, house, glowG, 604, 112, 56, 70, 0.5);
+  const ora = oraAtWindow(ctx, house, 632, 182); // behind the bars
   P(house, Array.from({ length: 7 }, (_, i) => `M${611 + i * 7} 112 L${611 + i * 7} 182`).join(' '), SP * 0.9);
   win(ctx, house, glowG, 330, 228, 44, 46, 0.55);
   win(ctx, house, glowG, 610, 226, 46, 50, 0.48);
@@ -274,7 +275,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   fr.addEventListener('pointerdown', (e) => { climber.forEach((c) => c.shake()); flock.startle(); drop(e, 8, [K.YELLOW, K.YELLOW, C.IVY]); });
 
   // ---------- on the pavement, in front of whoever walks by: metal barriers
-  lady(ctx, lay('street'), GROUND + 16, R1 + 60, L - 60); // walks slowly by, right to left
+  lady(ctx, lay('street'), GROUND + 16, R1 + 60, L - 60, { gate: 216, bust: ora }); // walks slowly by, right to left; home at night
 
   const fall = lay('fall');
   for (const x of [300, 420, 760]) {

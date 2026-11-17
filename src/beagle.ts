@@ -6,9 +6,11 @@
 import { el, shape, blot, paint, pen, limb, solid, joint, hang, place, toScene, f, PEN, type Vec } from '../lib/ink.ts';
 import { gait } from '../lib/gait.ts';
 import { spring, pendulum } from '../lib/motion.ts';
+import { type Bed, isNight } from './kit.ts';
 
 type Tint = <T extends Element>(n: T, c: string, attr?: string) => T;
-const TAN = '#b9783f', EAR = '#7f5129', COLLAR = '#8e3b2c';
+export const TAN = '#b9783f', EAR = '#7f5129';
+const COLLAR = '#8e3b2c';
 const BONE = 6; // thigh = shin: short legs
 const CAT_BONE = 4.4, NOSE = '#d99a9a';
 
@@ -16,16 +18,16 @@ const oval = (cx: number, cy: number, rx: number, ry: number) =>
   `M${f(cx - rx)} ${f(cy)} a${rx} ${ry} 0 1 0 ${f(2 * rx)} 0 a${rx} ${ry} 0 1 0 ${f(-2 * rx)} 0Z`;
 const bump = (x: number, w = 0.35) => (x > 0 && x < w ? Math.sin((Math.PI * x) / w) : 0);
 
-export interface BeagleOptions { ground: number; scale: number; width: number; sniffAt: number; tint: Tint }
+export interface BeagleOptions { ground: number; scale: number; width: number; sniffAt: number; tint: Tint; bed?: Bed; wall?: { x0: number; x1: number; y: number } }
 
-export function beagle(parent: Element, { ground, scale, width, sniffAt, tint }: BeagleOptions): { step(t: number, dt: number, wind: number): void; x(): number } {
+export function beagle(parent: Element, { ground, scale, width, sniffAt, tint, bed, wall }: BeagleOptions): { step(t: number, dt: number, wind: number, tau: number): void; x(): number } {
   const root = el('g', {}, parent);
   const trot = gait({ kind: 'walk', stride: 10, duty: 0.6, period: 0.46, lift: 2.4, heelOff: 6, thigh: BONE, shin: BONE, ankleY: 118.8, ground: 120, toe: 1.8 });
 
   // her own slower, longer-period walk
-  const catWalk = gait({ kind: 'walk', stride: 7.5, duty: 0.62, period: 0.72, lift: 2, heelOff: 4, thigh: CAT_BONE, shin: CAT_BONE, ankleY: 119.4, ground: 120, toe: 1.2 });
+  const catWalk = gait({ kind: 'walk', stride: 6.6, duty: 0.62, period: 0.95, lift: 2, heelOff: 4, thigh: CAT_BONE, shin: CAT_BONE, ankleY: 119.4, ground: 120, toe: 1.2 });
   const cat = el('g', { style: 'cursor:pointer' }, root);
-  el('title', {}, cat).textContent = 'White cat';
+  el('title', {}, cat).textContent = 'Angel, the white cat';
   el('rect', { x: 28, y: 98, width: 50, height: 26, fill: 'transparent' }, cat);
   const catTail = limb(cat, 1.9, PEN * 0.7);
   const catFar = [pen(cat, PEN * 0.9), pen(cat, PEN * 0.9)];
@@ -39,11 +41,14 @@ export function beagle(parent: Element, { ground, scale, width, sniffAt, tint }:
   const meow = el('text', { 'font-size': 8, 'font-family': 'Georgia, serif', 'font-style': 'italic', fill: 'currentColor', opacity: 0, 'pointer-events': 'none' }, root);
   meow.textContent = 'meow';
   const catTailSway = spring(20, 4);
-  let catPhase = 0.35, cx = 560, cgo = 1, cmode: 'meow' | 'pause' | null = null, cmodeT = 0, nextPause = 6;
-  const CDUR = { meow: 2.4, pause: 2.8 };
+  // she wanders the wall top (or the pavement, on a street without that wall), turning now and then, sometimes napping a few minutes
+  const W = wall ?? { x0: -60, x1: width + 60, y: ground };
+  let catPhase = 0.35, cx = (W.x0 + W.x1) / 2, cdir: 1 | -1 = 1, cgo = 1, cmode: 'meow' | 'pause' | 'nap' | null = null, cmodeT = 0, cdur = 0, nextPause = 6;
+  const zs = [0, 1, 2].map(() => el('text', { 'font-size': 6, 'font-family': "'Architects Daughter', Georgia, serif", fill: 'currentColor', opacity: 0, 'pointer-events': 'none' }, root));
+  zs.forEach((z) => { z.textContent = 'z'; });
 
   const dog = el('g', { style: 'cursor:pointer' }, root);
-  el('title', {}, dog).textContent = 'Beagle';
+  el('title', {}, dog).textContent = 'Toto, the beagle';
   el('rect', { x: 26, y: 88, width: 70, height: 36, fill: 'transparent' }, dog); // a finger-sized target
   const tail = limb(dog, 2.4, PEN * 0.8);
   tint(tail.g.querySelector('path')!, TAN);
@@ -70,13 +75,22 @@ export function beagle(parent: Element, { ground, scale, width, sniffAt, tint }:
   const earSwing = pendulum(14, 1.6), tailWag = spring(80, 6);
   let x = 220, phase = 0.1, go = 1;
   let mode: 'bark' | 'sniff' | 'rest' | null = null, modeT = 0, sniffed = false, walked = 0, nextRest = 9;
+  let home = false, started = false; // home: asleep in the hammock for the night
   const DUR = { bark: 2.6, sniff: 3.2, rest: 3.2 };
   dog.addEventListener('pointerdown', () => { if (!mode) { mode = 'bark'; modeT = 0; } });
-  cat.addEventListener('pointerdown', () => { if (cmode !== 'meow') { cmode = 'meow'; cmodeT = 0; } });
+  cat.addEventListener('pointerdown', () => { if (cmode !== 'meow') { cmode = 'meow'; cmodeT = 0; cdur = 2.4; } });
 
   return {
     x: () => x,
-    step(t, dt, wind) {
+    step(t, dt, wind, tau) {
+      // after sunset he heads home: in through the gate when he next reaches it, then asleep in the hammock till morning
+      const night = isNight(tau);
+      if (bed && night && !home && !started) { home = true; bed.show(true); }
+      if (bed && !night && home) { home = false; bed.show(false); x = bed.gate; sniffed = true; mode = null; }
+      started = true;
+      dog.style.display = home ? 'none' : '';
+      if (!home) {
+      const before = x;
       if (!mode && !sniffed && x > sniffAt) { mode = 'sniff'; modeT = 0; sniffed = true; }
       walked += dt * go;
       if (!mode && walked > nextRest && x > 0 && x < width) { mode = 'rest'; modeT = 0; walked = 0; nextRest = 10 + Math.random() * 8; }
@@ -85,6 +99,7 @@ export function beagle(parent: Element, { ground, scale, width, sniffAt, tint }:
       phase += (dt / trot.period) * go;
       x += trot.speed * scale * dt * go;
       if (x > width + 90) { x = -90; sniffed = false; }
+      if (bed && night && before < bed.gate && x >= bed.gate) { home = true; bed.show(true); }
       place(dog, x, ground, 1, scale);
 
       // hind legs on the gait, front legs a quarter cycle later
@@ -132,19 +147,25 @@ export function beagle(parent: Element, { ground, scale, width, sniffAt, tint }:
       const ms = toScene(x, ground, 1, Hd[0] + 6, Hd[1] - 9, scale);
       woof.setAttribute('x', f(ms[0])); woof.setAttribute('y', f(ms[1]));
       woof.setAttribute('opacity', f(Math.min(1, barkK * 1.6)));
+      }
 
       // ---------- the cat: open strokes, single-stroke legs with ink-dot feet
       nextPause -= dt * cgo;
-      if (!cmode && nextPause <= 0) { cmode = 'pause'; cmodeT = 0; nextPause = 7 + Math.random() * 8; }
-      if (cmode) { cmodeT += dt; if (cmodeT > CDUR[cmode]) cmode = null; }
+      if (!cmode && nextPause <= 0) {
+        cmode = Math.random() < 0.25 ? 'nap' : 'pause'; cmodeT = 0; nextPause = 6 + Math.random() * 12;
+        cdur = cmode === 'nap' ? 100 + Math.random() * 80 : 2 + Math.random() * 4;
+      }
+      if (cmode) { cmodeT += dt; if (cmodeT > cdur) { if (cmode !== 'meow' && Math.random() < 0.45) cdir = -cdir as 1 | -1; cmode = null; } }
       cgo += ((cmode ? 0 : 1) - cgo) * Math.min(1, dt * 2.5);
       catPhase += (dt / catWalk.period) * cgo;
-      cx += catWalk.speed * scale * dt * cgo;
-      if (cx > width + 60) cx = -60;
-      place(cat, cx, ground, 1, scale);
+      cx += cdir * catWalk.speed * scale * dt * cgo;
+      if (cx < W.x0 || cx > W.x1) { cx = Math.max(W.x0, Math.min(W.x1, cx)); cdir = -cdir as 1 | -1; } // turn at the end of the wall
+      place(cat, cx, W.y, cdir, scale);
+      // napping: she settles down into a loaf, head low, eyes shut, tail wrapped round
+      const napE = cmode === 'nap' ? Math.min(1, cmodeT / 1.4, (cdur - cmodeT) / 1.4) : 0, nap = napE * napE * (3 - 2 * napE);
       const ch = catWalk.pose(catPhase, cgo), cf = catWalk.pose(catPhase + 0.25, cgo);
-      const CH = ch.hip, CS: Vec = [58, cf.hip[1]];
-      const meowK = cmode === 'meow' ? bump(modeT - 0.3, 0.6) + bump(modeT - 1.3, 0.6) : 0;
+      const CH: Vec = [ch.hip[0], ch.hip[1] + nap * 4.4], CS: Vec = [58, cf.hip[1] + nap * 4];
+      const meowK = cmode === 'meow' ? bump(cmodeT - 0.3, 0.6) + bump(cmodeT - 1.3, 0.6) : 0;
       const catLegs = (i: number) => {
         const front: Vec = [cf.feet[i].ankle[0] + 18, cf.feet[i].ankle[1]];
         return { hind: [CH, ch.feet[i].knee, ch.feet[i].ankle], fore: [CS, joint(CS, front, CAT_BONE, CAT_BONE, -1), front] };
@@ -154,22 +175,28 @@ export function beagle(parent: Element, { ground, scale, width, sniffAt, tint }:
       const cFar = catLegs(1), cNear = catLegs(0);
       stroke(catFar[0], cFar.hind); stroke(catFar[1], cFar.fore); dotFeet(catFarFeet, [cFar.hind, cFar.fore]);
       stroke(catNear[0], cNear.hind); stroke(catNear[1], cNear.fore); dotFeet(catNearFeet, [cNear.hind, cNear.fore]);
+      for (const n of [...catFar, ...catNear, ...catFarFeet, ...catNearFeet]) n.style.opacity = f(1 - nap); // legs tuck under
       const cm = (CH[1] + CS[1]) / 2;
       const backD = `M${f(CH[0] - 3.4)} ${f(CH[1] - 1)} Q${f(CH[0] - 2)} ${f(CH[1] - 4.6)} ${f(48)} ${f(cm - 5.4)} Q${f(CS[0] - 2)} ${f(CS[1] - 5)} ${f(CS[0] + 2)} ${f(CS[1] - 4)}`;
       const bellyD = `M${f(CS[0] + 2.6)} ${f(CS[1] + 1.4)} Q${f(48)} ${f(cm + 4.4)} ${f(CH[0] + 1)} ${f(CH[1] + 2.4)}`;
       catBack.setAttribute('d', backD);
       catBelly.setAttribute('d', bellyD);
       catFill.setAttribute('d', backD + ` L${f(CS[0] + 2.6)} ${f(CS[1] + 1.4)} ` + bellyD.slice(bellyD.indexOf('Q')) + 'Z');
-      const cnod = cf.bob * 0.4 - meowK * 1.6;
+      const cnod = cf.bob * 0.4 - meowK * 1.6 + nap * 2.6;
       const C: Vec = [CS[0] + 5, CS[1] - 6.4 + cnod];
       catHead.setAttribute('d', oval(C[0], C[1], 3.4, 2.9));
       catEars.setAttribute('d', `M${f(C[0] - 2.6)} ${f(C[1] - 1.6)} L${f(C[0] - 2.2)} ${f(C[1] - 5.2)} L${f(C[0] - 0.4)} ${f(C[1] - 2.6)}Z M${f(C[0] + 0.6)} ${f(C[1] - 2.7)} L${f(C[0] + 2.4)} ${f(C[1] - 5.4)} L${f(C[0] + 2.8)} ${f(C[1] - 1.8)}Z`);
       catNose.setAttribute('d', oval(C[0] + 3.2, C[1] + 0.4, 0.6, 0.5));
-      catEye.setAttribute('d', oval(C[0] + 1.4, C[1] - 0.6, 0.4, 0.4));
+      catEye.setAttribute('d', nap > 0.5 ? `M${f(C[0] + 0.6)} ${f(C[1] - 0.6)} q0.8 0.6 1.6 0 l0 0.3 q-0.8 0.6 -1.6 0Z` : oval(C[0] + 1.4, C[1] - 0.6, 0.4, 0.4));
       const sway = catTailSway.step(wind * 6 + Math.sin(t * 1.7) * 6 + (cmode ? 10 : 0), dt);
       const CT: Vec = [CH[0] - 3, CH[1] - 1.6];
-      catTail.draw([CT, hang(CT, 7, 200 + sway), hang(CT, 13, 172 + sway * 1.4)], [0, 0]);
-      const mm = toScene(cx, ground, 1, C[0] + 3, C[1] - 6, scale);
+      // napping, the tail comes round over her back and lies forward along the wall by her feet
+      catTail.draw([CT, hang(CT, 7, (200 + sway) * (1 - nap) + 60 * nap), hang(CT, 13, (172 + sway * 1.4) * (1 - nap) + 84 * nap)], [0, 0]);
+      zs.forEach((z, i) => {
+        const k = (t / 3 + i / 3) % 1, [zx, zy] = toScene(cx, W.y, cdir, C[0] + 2 + k * 6, C[1] - 5 - k * 12, scale);
+        z.setAttribute('x', f(zx)); z.setAttribute('y', f(zy)); z.setAttribute('opacity', f(nap * Math.sin(Math.PI * k)));
+      });
+      const mm = toScene(cx, W.y, cdir, C[0] + 3, C[1] - 6, scale);
       meow.setAttribute('x', f(mm[0])); meow.setAttribute('y', f(mm[1]));
       meow.setAttribute('opacity', f(Math.min(1, meowK * 1.6)));
     },
