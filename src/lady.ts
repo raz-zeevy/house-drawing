@@ -6,14 +6,17 @@
 import { el, pen, shape, blot, paint, limb, shoe, joint, place, toScene, f, pt, PEN, type Vec } from '../lib/ink.ts';
 import { gait } from '../lib/gait.ts';
 import { spring, ease, seeded } from '../lib/motion.ts';
-import { type Ctx, isNight, tint } from './kit.ts';
+import { type Ctx, type Win, isNight, tint } from './kit.ts';
 
 const CARDIGAN = '#8a6478', SKIRT = '#4f5b72', HAIR = '#f3f0e8', CANE = '#6b4a32';
 const SCALE = 0.92, WAVE = 2.6;
 
-/** Ora at a window, seen from the street: head and shoulders, facing out. Draw it between the window pane and its bars; `lady` shows and hides it. */
-export function oraAtWindow(ctx: Ctx, parent: Element, cx: number, by: number): SVGGElement {
-  const g = el('g', { display: 'none', 'pointer-events': 'none' }, parent);
+/** Ora's window at night: she's there with the light on, or the light is off. */
+export interface OraWindow { show(seen: boolean): void; reset(): void }
+
+/** Ora at a small window, seen from the street: head and shoulders at `s` scale, facing out. Draw it just after the window `w`, so whatever is in front of the window covers her too. */
+export function oraAtWindow(ctx: Ctx, parent: Element, w: Win, cx: number, by: number, s: number): OraWindow {
+  const g = el('g', { display: 'none', 'pointer-events': 'none', transform: `translate(${cx} ${by}) scale(${s}) translate(${-cx} ${-by})` }, parent);
   el('title', {}, g).textContent = 'Ora at her window';
   tint(ctx, paint(g, CARDIGAN, PEN * 0.6), CARDIGAN).setAttribute('d', `M${cx - 20} ${by} L${cx - 18} ${by - 13} Q${cx - 12} ${by - 20} ${cx - 4} ${by - 21} L${cx + 4} ${by - 21} Q${cx + 12} ${by - 20} ${cx + 18} ${by - 13} L${cx + 20} ${by}Z`);
   pen(g, PEN * 0.45).setAttribute('d', `M${cx} ${by - 18} l0 18 M${cx + 1.6} ${by - 12} l0.1 0 M${cx + 1.6} ${by - 6} l0.1 0`);
@@ -23,11 +26,14 @@ export function oraAtWindow(ctx: Ctx, parent: Element, cx: number, by: number): 
   hair.setAttribute('d', `M${cx - 7} ${by - 29} Q${cx - 8.6} ${by - 41} ${cx} ${by - 40.4} Q${cx + 8.6} ${by - 41} ${cx + 7} ${by - 29} Q${cx + 5.6} ${by - 35} ${cx} ${by - 35.4} Q${cx - 5.6} ${by - 35} ${cx - 7} ${by - 29}Z M${cx - 3.4} ${by - 42.4} a3.4 2.6 0 1 0 6.8 0 a3.4 2.6 0 1 0 -6.8 0Z`);
   pen(head, PEN * 0.4).setAttribute('d', `M${cx - 4.4} ${by - 31} a1.8 1.7 0 1 0 3.6 0 a1.8 1.7 0 1 0 -3.6 0 M${cx + 0.8} ${by - 31} a1.8 1.7 0 1 0 3.6 0 a1.8 1.7 0 1 0 -3.6 0 M${cx - 0.8} ${by - 31.2} l1.6 0 M${cx - 1.4} ${by - 26.4} q1.4 0.8 2.8 0`);
   ctx.add({ step: ({ t }) => { if (g.getAttribute('display') !== 'none') head.setAttribute('transform', `rotate(${f(Math.sin(t * 0.45) * 5)} ${cx} ${by - 22})`); } });
-  return g;
+  return {
+    show(seen) { g.setAttribute('display', seen ? '' : 'none'); w.setPower(seen ? 1 : 0); },
+    reset() { g.setAttribute('display', 'none'); w.setPower(1); },
+  };
 }
 
-/** Walks inside the lot's local x range [from, to] (right to left), feet on `ground`; at night she goes in at `gate` and shows at the window `bust` now and then. */
-export function lady(ctx: Ctx, parent: Element, ground: number, from: number, to: number, { gate, bust }: { gate: number; bust: SVGGElement }): void {
+/** Walks inside the lot's local x range [from, to] (right to left), feet on `ground`; at night she goes in at `gate` and is at her `window` now and then. */
+export function lady(ctx: Ctx, parent: Element, ground: number, from: number, to: number, { gate, window }: { gate: number; window: OraWindow }): void {
   const R = seeded(1949);
   const fig = el('g', { style: 'cursor:pointer' }, parent);
   el('title', {}, fig).textContent = 'Ora, out for a walk';
@@ -59,13 +65,13 @@ export function lady(ctx: Ctx, parent: Element, ground: number, from: number, to
     step({ t, dt, tau }) {
       const night = isNight(tau);
       if (night && !home && (!started || rest > 0)) home = true; // already out of sight: she's simply indoors
-      if (!night && home) { home = false; x = gate; rest = 0; seen = false; bust.setAttribute('display', 'none'); }
+      if (!night && home) { home = false; x = gate; rest = 0; seen = false; window.reset(); }
       started = true;
       if (home) {
-        // now at the window, now not: a few seconds to half a minute each
+        // at her window with the light on, or the light off: a few minutes each
         fig.style.display = 'none';
         flip -= dt;
-        if (flip <= 0) { seen = !seen && Math.random() < 0.6; flip = seen ? R(8, 25) : R(6, 30); bust.setAttribute('display', seen ? '' : 'none'); }
+        if (flip <= 0) { seen = !seen && Math.random() < 0.7; flip = seen ? R(90, 240) : R(120, 300); window.show(seen); }
         return;
       }
       if (rest > 0) { rest -= dt; fig.style.display = 'none'; return; }

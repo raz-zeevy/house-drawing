@@ -119,10 +119,10 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   P(house, 'M300 214 L582 214', SP * 0.4).setAttribute('opacity', '0.6');
   // barred window and a window below the balcony, mostly behind the hedge
   win(ctx, house, glowG, 604, 112, 56, 70, 0.5);
-  const ora = oraAtWindow(ctx, house, 632, 182); // behind the bars
   P(house, Array.from({ length: 7 }, (_, i) => `M${611 + i * 7} 112 L${611 + i * 7} 182`).join(' '), SP * 0.9);
   win(ctx, house, glowG, 330, 228, 44, 46, 0.55);
-  win(ctx, house, glowG, 610, 226, 46, 50, 0.48);
+  const oraWin = win(ctx, house, glowG, 610, 226, 46, 50, 0.48);
+  const ora = oraAtWindow(ctx, house, oraWin, 633, 262, 0.75); // Ora's room: the small window on the right
 
   // ---------- the hedge: plumbago on the left, red blossom on the right
   const hd = lay('hedge');
@@ -275,7 +275,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   fr.addEventListener('pointerdown', (e) => { climber.forEach((c) => c.shake()); flock.startle(); drop(e, 8, [K.YELLOW, K.YELLOW, C.IVY]); });
 
   // ---------- on the pavement, in front of whoever walks by: metal barriers
-  lady(ctx, lay('street'), GROUND + 16, R1 + 60, L - 60, { gate: 216, bust: ora }); // walks slowly by, right to left; home at night
+  lady(ctx, lay('street'), GROUND + 16, R1 + 60, L - 60, { gate: 216, window: ora }); // walks slowly by, right to left; home at night
 
   const fall = lay('fall');
   for (const x of [300, 420, 760]) {

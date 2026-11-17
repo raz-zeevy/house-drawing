@@ -161,19 +161,21 @@ export function strand(ctx: Ctx, parent: Element, x: number, y: number, len: num
 
 // ------------------------------------------------------------------ windows
 /** A window: pane (glass by day, warm at night), frame, sill and a glow. `cover` (0..1) dims the glow, e.g. a shutter. */
-export interface Win extends Part { pane: SVGPathElement; lit: number; setCover(c: number): void }
+export interface Win extends Part { pane: SVGPathElement; lit: number; setCover(c: number): void; /** 0 switches the light off, 1 back on. */ setPower(p: number): void }
 export function win(ctx: Ctx, g: Element, glowG: Element, x: number, y: number, w: number, h: number, on: number, frame = true): Win {
   const pane = fillPath(g, box(x, y, w, h));
   if (frame) { P(g, box(x, y, w, h), SP * 1.1); P(g, box(x + 2, y + 2, w - 4, h - 4), SP * 0.5); P(g, `M${x - 3} ${y + h + 2} L${x + w + 3} ${y + h + 2}`); }
   const gl = el('circle', { cx: x + w / 2, cy: y + h / 2, r: Math.max(w, h) + 22, fill: 'url(#h-glow)', opacity: 0 }, glowG);
-  let cover = 0;
-  const glowNow = () => gl.setAttribute('opacity', f(part.lit * (1 - cover)));
+  let cover = 0, power = 1, last: Palette | null = null;
+  const glowNow = () => gl.setAttribute('opacity', f(part.lit * power * (1 - cover)));
   const part: Win = {
     pane, lit: 0,
     setCover(c) { cover = c; glowNow(); },
+    setPower(p) { power = p; if (last) part.paint!(last); },
     paint(pal) {
+      last = pal;
       part.lit = smooth(on - 0.12, on + 0.12, pal.lamp);
-      pane.setAttribute('fill', rgb(mix(mix(pal.paper, GLASS, 0.75), WARM, part.lit)));
+      pane.setAttribute('fill', rgb(mix(mix(pal.paper, GLASS, 0.75), WARM, part.lit * power)));
       glowNow();
     },
   };
