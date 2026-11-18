@@ -79,7 +79,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   bw = true;
   // ---------- next door on the left: a grey block with balconies over the importer's shop and a kiosk
   const nb = lay('back');
-  fill(nb, box(L - 4, 60, 364 + PAD, 244, 0.4), '#f6f5f1');
+  fill(nb, box(L - 4, 60, 364 + PAD, GROUND - 60, 0.4), '#f6f5f1'); // down to the pavement, or the sky shows round the shopfronts
   for (const [y, h] of [[92, 74], [196, 72]]) {
     fill(nb, box(L + 8, y, 340 + PAD - 20, h - 18, 0.3), '#dcdcd8');
     sash(nb, L + 30, y + 10, 46, h - 30, lit());
@@ -203,6 +203,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   // ---------- the shops (in greys too: only the teal building above them is in colour)
   bw = true;
   const shop = lay('house');
+  fill(shop, box(358, 300, 424, GROUND - 300, 0.3), '#f6f5f1'); // the ground-floor wall behind the shopfronts
   // DIVANI: a yellow frame, a black inner frame, a second yellow frame and the glass
   fill(shop, box(362, 300, 196, 104, 0.3), K.YELLOW);
   fill(shop, box(374, 314, 172, 90, 0.3), K.BLACK);
