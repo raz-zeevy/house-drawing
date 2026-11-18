@@ -18,8 +18,8 @@ import { type Ctx, type Clump, type LotDef, type Lot, C, GROUND, H, SP, P, S, at
 const WIDTH = 1280, PAD = 88, L = -PAD, R1 = WIDTH - PAD;
 const K = {
   TEAL: '#5e9a9b', RECESS: '#8f9493', YELLOW: '#d6a52a', BLACK: '#2a292c', GOLD: '#e0b65a', SIGN: '#3a3127',
-  GREEN: '#4e9a4a', RED: '#c8432f', ORANGE: '#d9692e', CANOPY: '#d5dad7', BEIGE: '#d8ccb0', SHUTTER: '#4b4f52',
-  PLATE: '#2f62b0', NEIGHBOUR: '#c9cbc8', AC: '#e4e4de', POLE: '#8b8f8c',
+  GREEN: '#4e9a4a', RED: '#c8432f', ORANGE: '#d9692e', CANOPY: '#d5dad7', SHUTTER: '#4b4f52',
+  PLATE: '#2f62b0', AC: '#e4e4de', POLE: '#8b8f8c',
 } as const;
 
 export const herzlLot: LotDef = {
@@ -79,9 +79,9 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   bw = true;
   // ---------- next door on the left: a grey block with balconies over the importer's shop and a kiosk
   const nb = lay('back');
-  fill(nb, box(L - 4, 60, 364 + PAD, 244, 0.4), K.NEIGHBOUR);
+  fill(nb, box(L - 4, 60, 364 + PAD, 244, 0.4), '#f6f5f1');
   for (const [y, h] of [[92, 74], [196, 72]]) {
-    fill(nb, box(L + 8, y, 340 + PAD - 20, h - 18, 0.3), K.RECESS);
+    fill(nb, box(L + 8, y, 340 + PAD - 20, h - 18, 0.3), '#dcdcd8');
     sash(nb, L + 30, y + 10, 46, h - 30, lit());
     for (const x of [120, 270]) {
       win(ctx, nb, glowG, x, y + 10, 34, h - 34, lit());
@@ -109,7 +109,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
 
   // ---------- next door on the right: an old beige block with dark shutters
   const nr = lay('back');
-  fill(nr, box(780, 70, R1 - 776, 334, 0.4), K.BEIGE);
+  fill(nr, box(780, 70, R1 - 776, 334, 0.4), '#f6f5f1');
   for (const y of [96, 196]) {
     S(nr, box(784, y, R1 - 790, 8, 0.2), SP * 0.8);
     for (const x of [800, 890, 980, 1070]) {
