@@ -4,11 +4,14 @@
 import { el, pen, shape, f } from '../lib/ink.ts';
 import { seeded } from '../lib/motion.ts';
 import type { Placed } from '../src/app.ts';
+import { emblem, BOX, STYLES, type Style } from './emblems.ts';
 
 export interface Plan { open(from: number): void; close(into: number): void; isOpen(): boolean }
 
 export function plan(box: HTMLElement, placed: Placed[], width: number, onPick: (i: number) => void): Plan {
   const MH = 440, ROAD = 330, rand = seeded(11);
+  // ?emblem=sketch|stamp|detail puts each house's emblem in its lot instead of the generic roof and trees
+  const style = new URLSearchParams(location.search).get('emblem') as Style | null, mark = style && STYLES.includes(style) ? style : null;
   box.style.cssText = 'position:absolute;inset:0;background:var(--paper);transition:opacity .45s ease, transform .6s cubic-bezier(.3,.7,.2,1);opacity:0;pointer-events:none;transform:scale(2.6)';
   const svg = el('svg', { viewBox: `0 -20 ${width} ${MH + 20}`, width: '100%', height: '100%', style: 'color:#2a2620;display:block' }, box);
   const P = (d: string, w = 1.2) => { const n = pen(svg, w); n.setAttribute('d', d); return n; };
@@ -21,13 +24,16 @@ export function plan(box: HTMLElement, placed: Placed[], width: number, onPick: 
     const fence = pen(g, 0.8);
     fence.setAttribute('d', `M${p.x0 + 6} ${ROAD - 8} L${p.x0 + 6} 40 L${p.x0 + p.width - 6} 40 L${p.x0 + p.width - 6} ${ROAD - 8}`);
     fence.setAttribute('stroke-dasharray', '6 5');
-    const hx = p.x0 + p.width * 0.28, hw = p.width * 0.44, hy = 110, hh = 130;
-    shape(g, 1.4).setAttribute('d', `M${hx} ${hy} L${hx + hw} ${hy} L${hx + hw} ${hy + hh} L${hx} ${hy + hh}Z`);
-    pen(g, 0.9).setAttribute('d', i % 2 ? `M${hx} ${hy} L${hx + hw / 2} ${hy + hh / 2} L${hx + hw} ${hy} M${hx} ${hy + hh} L${hx + hw / 2} ${hy + hh / 2} L${hx + hw} ${hy + hh}` : `M${hx + 8} ${hy + 8} L${hx + hw - 8} ${hy + 8} L${hx + hw - 8} ${hy + hh - 8} L${hx + 8} ${hy + hh - 8}Z`);
-    for (let k = 0; k < 3; k++) {
-      const cx = p.x0 + rand(40, p.width - 40), cy = rand(60, 280), r = rand(28, 48), pts: string[] = [];
-      for (let a = 0; a <= 48; a++) { const t = (a / 48) * Math.PI * 2, rr = r * (0.9 + 0.12 * Math.abs(Math.sin(t * 4.5))); pts.push(`${f(cx + rr * Math.cos(t))} ${f(cy + rr * Math.sin(t))}`); }
-      shape(g, 1).setAttribute('d', 'M' + pts.join('L') + 'Z');
+    if (mark) { const sc = 270 / BOX.h; emblem(g, p.name, mark, p.x0 + (p.width - BOX.w * sc) / 2, 50, sc); }
+    else {
+      const hx = p.x0 + p.width * 0.28, hw = p.width * 0.44, hy = 110, hh = 130;
+      shape(g, 1.4).setAttribute('d', `M${hx} ${hy} L${hx + hw} ${hy} L${hx + hw} ${hy + hh} L${hx} ${hy + hh}Z`);
+      pen(g, 0.9).setAttribute('d', i % 2 ? `M${hx} ${hy} L${hx + hw / 2} ${hy + hh / 2} L${hx + hw} ${hy} M${hx} ${hy + hh} L${hx + hw / 2} ${hy + hh / 2} L${hx + hw} ${hy + hh}` : `M${hx + 8} ${hy + 8} L${hx + hw - 8} ${hy + 8} L${hx + hw - 8} ${hy + hh - 8} L${hx + 8} ${hy + hh - 8}Z`);
+      for (let k = 0; k < 3; k++) {
+        const cx = p.x0 + rand(40, p.width - 40), cy = rand(60, 280), r = rand(28, 48), pts: string[] = [];
+        for (let a = 0; a <= 48; a++) { const t = (a / 48) * Math.PI * 2, rr = r * (0.9 + 0.12 * Math.abs(Math.sin(t * 4.5))); pts.push(`${f(cx + rr * Math.cos(t))} ${f(cy + rr * Math.sin(t))}`); }
+        shape(g, 1).setAttribute('d', 'M' + pts.join('L') + 'Z');
+      }
     }
     const label = el('text', { x: p.x0 + p.width / 2, y: 22, 'text-anchor': 'middle', 'font-size': 26, 'font-family': 'Georgia, serif', 'font-style': 'italic', fill: 'currentColor' }, g);
     label.textContent = p.name;

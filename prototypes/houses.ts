@@ -61,3 +61,4 @@ addEventListener('keydown', (e) => {
   else if (e.key === 'ArrowRight') go(page + 1);
 });
 go(0);
+if (new URLSearchParams(location.search).has('map')) openMap();

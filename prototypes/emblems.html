@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>House emblems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Architects+Daughter&display=swap">
+<link rel="stylesheet" href="./proto.css">
+<style>
+  body { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; justify-content: flex-start; height: auto; min-height: 100%; }
+  .sheet { display: grid; grid-template-columns: 9em repeat(3, minmax(0, 1fr)); gap: 14px 18px; width: min(100%, 1100px); align-items: center; }
+  .sheet h2 { margin: 0; font-size: 18px; font-weight: normal; text-align: center; }
+  .sheet h2 a { color: var(--accent); }
+  .sheet .who { font-size: 17px; }
+  .tile { background: var(--paper); border-radius: 12px; box-shadow: 0 0 0 1px var(--edge); padding: 10px; color: #2a2620; }
+  .tile svg { display: block; width: 100%; height: auto; }
+  p.note { color: var(--muted); max-width: 60ch; text-align: center; margin: 0; }
+  @media (max-width: 640px) { .sheet { grid-template-columns: repeat(3, minmax(0, 1fr)); } .sheet .who { grid-column: 1 / -1; } .sheet .corner { display: none; } }
+</style>
+</head>
+<body>
+  <h1>An emblem for each house: three ways to draw it</h1>
+  <div class="sheet" id="sheet"><span class="corner"></span></div>
+  <p class="note">Each column title opens the street map with that style inside each lot.</p>
+  <script type="module">
+    import { emblem, STYLES, BOX } from './emblems.ts';
+    import { el } from '../lib/ink.ts';
+    const sheet = document.getElementById('sheet');
+    const NAMES = { sketch: 'A · sketch', stamp: 'B · stamp', detail: 'C · detail' };
+    for (const s of STYLES) { const h = document.createElement('h2'); h.innerHTML = `<a href="./houses.html?emblem=${s}&map">${NAMES[s]}</a>`; sheet.append(h); }
+    for (const name of ['Arbel 189', 'Meir Shacham 3', 'Herzl 34']) {
+      const w = document.createElement('div'); w.className = 'who'; w.textContent = name; sheet.append(w);
+      for (const s of STYLES) {
+        const t = document.createElement('div'); t.className = 'tile'; sheet.append(t);
+        emblem(el('svg', { viewBox: `0 0 ${BOX.w} ${BOX.h}` }, t), name, s);
+      }
+    }
+  </script>
+</body>
+</html>
