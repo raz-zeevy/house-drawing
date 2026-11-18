@@ -51,10 +51,11 @@ function home(ctx: Ctx, x0: number, drop: Drop): Lot {
 
   // ---------- the house
   const house = lay('house', OX);
-  S(house, 'M196 76 Q330 74 472 74 L472 262 L198 262Z');
-  P(house, 'M192 74 Q332 71 476 72 M194 79 Q332 77 474 77');
+  // long and low: it runs on behind the bushy tree almost to the gate pillar, windows at one even spacing
+  S(house, 'M196 76 Q400 73 598 74 L598 262 L198 262Z');
+  P(house, 'M192 74 Q400 70 602 72 M194 79 Q400 76 600 77');
   const shade: string[] = [];
-  for (const [x, y] of [[210, 96], [300, 92], [262, 186], [214, 206], [318, 196], [340, 140]]) for (let i = 0; i < 5; i++) shade.push(`M${x + i * 2.6} ${y} l-5 9`);
+  for (const [x, y] of [[210, 96], [300, 92], [262, 186], [214, 206], [318, 196], [340, 140], [420, 100], [480, 190], [530, 96], [576, 200]]) for (let i = 0; i < 5; i++) shade.push(`M${x + i * 2.6} ${y} l-5 9`);
   P(house, shade.join(' '), SP * 0.35).setAttribute('opacity', '0.6');
   const shuttered = win(ctx, house, glowR, 240, 121, 23, 45, 0.55);
   win(ctx, house, glowR, 292, 121, 24, 45, 0.4);
@@ -63,6 +64,12 @@ function home(ctx: Ctx, x0: number, drop: Drop): Lot {
   P(house, box(290, 116, 28, 5), SP * 0.7);
   win(ctx, house, glowR, 240, 220, 23, 34, 0.5);
   win(ctx, house, glowR, 292, 220, 24, 34, 0.46);
+  for (const [i, x] of [344, 396, 448, 500, 552].entries()) {
+    // behind the bushy tree, so only a little of their light gets through the leaves; some stay dark
+    win(ctx, house, glowR, x, 121, 24, 45, [0.3, 2, 0.45, 2, 0.5][i]).setCover(0.85);
+    P(house, box(x - 2, 116, 28, 5), SP * 0.7);
+    win(ctx, house, glowR, x, 220, 24, 34, [2, 0.35, 2, 0.55, 2][i]).setCover(0.85);
+  }
   const hit = el('path', { d: box(228, 106, 47, 72), fill: 'transparent', style: 'cursor:pointer' }, house);
   el('title', {}, hit).textContent = 'Roller shutter';
   hit.addEventListener('pointerdown', roll);
