@@ -173,6 +173,20 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   // right wing, roof terrace: a small window, the railing, a satellite dish on the corner
   sash(h, 650, 114, 30, 40, lit());
   railing(h, 630, 770, 156, 176, 9);
+  // fairy lights draped along the top rail: barely there by day, warm little bulbs that twinkle at night
+  const swag = 20, sagF = 4, bulbs: { c: SVGCircleElement; g: SVGCircleElement; ph: number }[] = [];
+  let string = 'M632 156';
+  for (let x = 632; x < 768; x += swag) string += ` Q${x + swag / 2} ${156 + sagF * 2} ${x + swag} 156`;
+  P(h, string, SP * 0.3).setAttribute('opacity', '0.5');
+  for (let x = 632; x <= 768; x += swag / 4) {
+    const u = ((x - 632) % swag) / swag, y = 156 + sagF * 4 * u * (1 - u) + 1.4;
+    bulbs.push({ c: el('circle', { cx: f(x), cy: f(y), r: 1.1 }, h), g: el('circle', { cx: f(x), cy: f(y), r: 7, fill: 'url(#h-glow)', opacity: 0 }, glowG), ph: R(0, 6.3) });
+  }
+  let lamp = 0;
+  ctx.add({
+    paint: (pal) => { lamp = pal.lamp; for (const b of bulbs) b.c.setAttribute('fill', lamp > 0.5 ? '#ffe2a8' : '#d8d6cc'); },
+    step: ({ t }) => { if (lamp > 0.05) for (const b of bulbs) b.g.setAttribute('opacity', f(lamp * (0.55 + 0.45 * Math.sin(t * 1.3 + b.ph)))); },
+  });
   S(h, 'M766 96 a10 12 -20 1 0 4 -22Z', SP * 0.8);
   P(h, 'M766 86 l-8 -4', SP * 0.6);
   // right wing, first floor: an air conditioner up high, a big window, a small one, a rail
