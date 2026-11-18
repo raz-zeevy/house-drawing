@@ -296,7 +296,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   bench(250, 64);
 
   // ---------- the street tree: a slim trunk and an airy crown in front of the arched windows
-  const tree = at(lay('bigTree'), 24);
+  const tree = el('g', { transform: 'translate(24 16)' }, lay('front')); // planted out on the pavement, level with the benches (front layer, so the paving doesn't hide its foot)
   limb(tree, 7, SP).draw([[468, 406], [470, 300], [462, 190]], [0, 0]);
   P(tree, 'M466 240 Q440 200 420 150 M470 220 Q500 180 530 130 M464 196 Q470 140 480 90 M430 180 Q410 160 392 140 M520 150 Q540 120 560 100', SP * 0.8);
   const crown: Clump[] = [];
