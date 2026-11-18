@@ -33,7 +33,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   // about a third of the flats stay dark at night
   const lit = () => (ctx.rand() < 0.35 ? 2 : ctx.rand(0.4, 0.7));
   const R = ctx.rand, lay = (name: keyof Ctx['layers']) => at(ctx.layers[name], x0 + PAD), glowG = at(ctx.glow, x0 + PAD);
-  // only the teal building is in colour: everything around it on the street is drawn in greys
+  // only the teal building is in colour: the shops under it and everything around it are drawn in greys
   let bw = false;
   const grey = (c: string) => { if (!bw) return c; const v = Math.round(toRGB(c).reduce((a, x, i) => a + x * [0.3, 0.59, 0.11][i], 0)); return '#' + v.toString(16).padStart(2, '0').repeat(3); };
   const fill = (g: Element, d: string, colour: string, w = SP * 0.8) => surface(ctx, paint(g, grey(colour), w), grey(colour)).setAttribute('d', d);
@@ -186,7 +186,8 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   for (const y of [176, 260, 284]) P(h, `M358 ${y} L782 ${y}`, SP * 0.6).setAttribute('opacity', '0.7');
   tube(h, [[782, 92], [782, 300]], 4, '#c9ccca');
 
-  // ---------- the shops
+  // ---------- the shops (in greys too: only the teal building above them is in colour)
+  bw = true;
   const shop = lay('house');
   // DIVANI: a yellow frame, a black inner frame, a second yellow frame and the glass
   fill(shop, box(362, 300, 196, 104, 0.3), K.YELLOW);
@@ -226,7 +227,6 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   accent(shop, box(800, 334, 8, 8, 0.1), K.RED, SP * 0.3);
   P(shop, 'M790 360 q6 -8 12 0 t12 -2', SP * 0.4).setAttribute('opacity', '0.5');
 
-  bw = true;
   // ---------- electricity: junction boxes, a meter cabinet, cable bundles down the walls
   const el2 = lay('house');
   for (const [x, y, w, hh] of [[784, 226, 22, 28], [340, 270, 16, 20], [1150, 200, 18, 24]]) {
