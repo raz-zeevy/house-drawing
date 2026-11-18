@@ -11,7 +11,7 @@ import { seeded, wobble } from '../lib/motion.ts';
 import type { Drop } from './falls.ts';
 import { birds } from './birds.ts';
 import { TEL_AVIV } from './places.ts';
-import { type Ctx, type Clump, type LotDef, type Lot, C, SP, P, S, at, box, clump, surface, tint, win } from './kit.ts';
+import { type Ctx, type Clump, type LotDef, type Lot, C, GROUND, H, SP, P, S, at, box, clump, surface, tint, win } from './kit.ts';
 
 // The drawing spans 0..1104; the lot is one desktop card (1280) wide, walls carried on through the PAD.
 const WIDTH = 1280, PAD = 88, L = -PAD, R1 = WIDTH - PAD;
@@ -71,18 +71,23 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
     P(g, `M${f(x + w / 2)} ${y} l0 ${h}`, SP * 0.8);
   };
 
-  // ---------- next door on the left: a grey block with balconies over the importer's shop
+  // The building is 360..780: left wing 360..480, the middle 480..620, right wing 620..780.
+  // ---------- next door on the left: a grey block with balconies over the importer's shop and a kiosk
   const nb = lay('back');
-  fill(nb, box(L - 4, 60, 254 + PAD, 244, 0.4), K.NEIGHBOUR);
+  fill(nb, box(L - 4, 60, 364 + PAD, 244, 0.4), K.NEIGHBOUR);
   for (const [y, h] of [[92, 74], [196, 72]]) {
-    fill(nb, box(L + 8, y, 230 + PAD - 20, h - 18, 0.3), K.RECESS);
+    fill(nb, box(L + 8, y, 340 + PAD - 20, h - 18, 0.3), K.RECESS);
     sash(nb, L + 30, y + 10, 46, h - 30, lit());
-    win(ctx, nb, glowG, 120, y + 10, 34, h - 34, lit());
-    P(nb, Array.from({ length: 5 }, (_, i) => `M120 ${y + 14 + i * 5} l34 0`).join(' '), SP * 0.4);
-    railing(nb, L + 4, 244, y + h - 26, y + h - 4, 8);
-    S(nb, box(L - 6, y + h - 4, 258 + PAD, 8, 0.2), SP * 0.8);
+    for (const x of [120, 270]) {
+      win(ctx, nb, glowG, x, y + 10, 34, h - 34, lit());
+      P(nb, Array.from({ length: 5 }, (_, i) => `M${x} ${y + 14 + i * 5} l34 0`).join(' '), SP * 0.4);
+    }
+    sash(nb, 190, y + 10, 46, h - 30, lit());
+    railing(nb, L + 4, 354, y + h - 26, y + h - 4, 8);
+    S(nb, box(L - 6, y + h - 4, 368 + PAD, 8, 0.2), SP * 0.8);
   }
   ac(nb, 30, 100, 40, 26);
+  ac(nb, 316, 204, 34, 22);
   // the importer's shop: a green sign over shelves of goods
   fill(nb, box(L + 6, 300, 238 + PAD - 6, 26, 0.3), '#7cae55');
   text(nb, 120, 318, 'חנות היבואן', 14, '#fdfcf8', 'Arial, sans-serif');
@@ -90,18 +95,24 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   win(ctx, nb, glowG, L + 10, 332, 226 + PAD - 10, 72, 0.7, false);
   P(nb, [346, 362, 378, 394].map((y) => `M${L + 10} ${y} L236 ${y}`).join(' '), SP * 0.4);
   accent(nb, Array.from({ length: 70 }, () => box(R(L + 14, 230), [338, 354, 370, 386][Math.floor(R(0, 4))], R(3, 6), 6, 0.1)).join(' '), K.PLATE, SP * 0.2);
+  // a kiosk: a blue sign, a fridge of drinks behind the glass
+  fill(nb, box(248, 300, 106, 26, 0.3), K.PLATE);
+  text(nb, 301, 318, 'קיוסק', 14, '#fdfcf8', 'Arial, sans-serif');
+  win(ctx, nb, glowG, 252, 332, 98, 72, 0.7, false);
+  P(nb, 'M300 332 l0 72 M256 340 l38 0 l0 60 l-38 0Z M256 360 l38 0 M256 380 l38 0', SP * 0.5);
+  accent(nb, Array.from({ length: 18 }, (_, i) => box(259 + (i % 6) * 6, 344 + Math.floor(i / 6) * 20, 3, 12, 0.1)).join(' '), K.RED, SP * 0.2);
 
-  // ---------- next door on the right: an old beige block with dark shutters, cables everywhere
+  // ---------- next door on the right: an old beige block with dark shutters
   const nr = lay('back');
-  fill(nr, box(860, 70, R1 - 856, 334, 0.4), K.BEIGE);
+  fill(nr, box(780, 70, R1 - 776, 334, 0.4), K.BEIGE);
   for (const y of [96, 196]) {
-    S(nr, box(866, y, R1 - 872, 8, 0.2), SP * 0.8);
-    for (const x of [890, 980, 1070]) {
+    S(nr, box(784, y, R1 - 790, 8, 0.2), SP * 0.8);
+    for (const x of [800, 890, 980, 1070]) {
       win(ctx, nr, glowG, x, y + 18, 70, 60, lit(), true);
       fill(nr, box(x + 2, y + 20, 66, 34, 0.2), K.SHUTTER, SP * 0.4); // shutters half down
       P(nr, Array.from({ length: 7 }, (_, i) => `M${x + 3} ${y + 24 + i * 4.6} l64 0`).join(' '), SP * 0.3).setAttribute('opacity', '0.6');
     }
-    S(nr, box(866, y + 84, R1 - 872, 10, 0.2), SP * 0.8);
+    S(nr, box(784, y + 84, R1 - 790, 10, 0.2), SP * 0.8);
   }
   ac(nr, 1000, 300, 44, 30);
   // its ground floor: a grey roller shutter with "32" sprayed above, and graffiti
@@ -114,114 +125,156 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   // ---------- the building
   const h = lay('house');
   // the teal body: wings up to the terrace parapets, the middle tower stepping up a little higher
-  fill(h, 'M250 300 L250 96 L440 96 L440 60 L560 60 L560 50 L650 50 L650 96 L860 96 L860 300Z', K.TEAL, SP);
+  fill(h, 'M360 300 L360 96 L480 96 L480 60 L560 60 L560 50 L620 50 L620 96 L780 96 L780 300Z', K.TEAL, SP);
   // recessed balconies and terraces, grey inside
-  for (const [x, w] of [[262, 168], [662, 186]]) {
+  for (const [x, w] of [[370, 102], [630, 140]]) {
     fill(h, box(x, 102, w, 74, 0.3), K.RECESS);
     fill(h, box(x, 196, w, 64, 0.3), K.RECESS);
   }
   // left wing, roof terrace: a shuttered window, an air conditioner, the railing, planters on the parapet
-  sash(h, 290, 116, 40, 48, lit());
-  ac(h, 352, 122, 44, 30);
-  railing(h, 262, 430, 156, 176, 9);
-  accent(h, `${box(268, 166, 30, 10, 0.2)} ${box(304, 168, 18, 8, 0.2)}`, K.ORANGE);
-  accent(h, box(326, 168, 22, 8, 0.2), '#3fa39a');
+  sash(h, 380, 116, 34, 44, lit());
+  ac(h, 424, 122, 40, 26);
+  railing(h, 370, 472, 156, 176, 9);
+  accent(h, `${box(374, 166, 26, 10, 0.2)} ${box(404, 168, 16, 8, 0.2)}`, K.ORANGE);
+  accent(h, box(424, 168, 20, 8, 0.2), '#3fa39a');
   // left wing, first floor: a shuttered window, a sliding window, pots on the railing
-  sash(h, 292, 206, 40, 46, lit());
-  fill(h, box(294, 208, 36, 18, 0.2), K.SHUTTER, SP * 0.4);
-  sash(h, 350, 206, 52, 46, lit());
-  railing(h, 262, 430, 244, 260, 9);
+  sash(h, 378, 206, 34, 46, lit());
+  fill(h, box(380, 208, 30, 18, 0.2), K.SHUTTER, SP * 0.4);
+  sash(h, 422, 206, 42, 46, lit());
+  railing(h, 370, 472, 244, 260, 9);
   const pots: Clump[] = [];
-  for (const [x, colour] of [[392, K.RED], [408, K.GREEN], [376, '#ecebe6']] as [number, string][]) {
+  for (const [x, colour] of [[451, K.RED], [464, K.GREEN], [438, '#ecebe6']] as [number, string][]) {
     accent(h, `M${x - 5} 236 L${x + 5} 236 L${x + 4} 244 L${x - 4} 244Z`, colour);
     pots.push(clump(ctx, h, x, 230, 7, 'ivy', 18, C.IVY, 0.7));
   }
   // middle: a window with a curtain and an air conditioner under it, its hose looping up the wall
-  sash(h, 500, 108, 40, 46, lit());
-  P(h, 'M524 110 q-4 20 2 42', SP * 0.4).setAttribute('opacity', '0.6');
-  ac(h, 492, 160, 48, 30);
-  el('path', { d: 'M542 172 Q556 160 552 132 Q548 96 576 92 Q600 90 640 98', fill: 'none', style: 'stroke: var(--paper)', 'stroke-width': 2.2, 'stroke-linecap': 'round' }, h);
-  P(h, 'M542 170 Q558 158 553 132 Q549 97 576 90 Q600 88 640 96', SP * 0.4);
-  P(h, 'M590 170 l34 6 M612 170 l4 10', SP * 0.9); // an old bracket sticking out of the wall
+  sash(h, 530, 108, 40, 46, lit());
+  P(h, 'M554 110 q-4 20 2 42', SP * 0.4).setAttribute('opacity', '0.6');
+  ac(h, 522, 160, 48, 30);
+  el('path', { d: 'M572 172 Q584 160 582 132 Q580 98 600 94 Q612 92 618 98', fill: 'none', style: 'stroke: var(--paper)', 'stroke-width': 2.2, 'stroke-linecap': 'round' }, h);
+  P(h, 'M572 170 Q586 158 583 132 Q581 99 600 92 Q612 90 618 96', SP * 0.4);
+  P(h, 'M586 174 l26 5 M604 174 l4 9', SP * 0.9); // an old bracket sticking out of the wall
   // middle, first floor: two tall arched windows with grilles
-  for (const x of [470, 566]) {
-    const w = 36, top = 206, r = w / 2;
+  for (const x of [500, 580]) {
+    const w = 34, top = 206, r = w / 2;
     win(ctx, h, glowG, x, top, w, 66, lit(), false);
     // teal corners turn the pane's square top into an arch
     fill(h, `M${x - 1} ${top - 1} L${x + r} ${top - 1} A${r} ${r} 0 0 0 ${x - 1} ${top + r}Z M${x + w + 1} ${top - 1} L${x + r} ${top - 1} A${r} ${r} 0 0 1 ${x + w + 1} ${top + r}Z`, K.TEAL, 0);
     P(h, `M${x} ${top + 66} L${x} ${top + r} A${r} ${r} 0 0 1 ${x + w} ${top + r} L${x + w} ${top + 66}`, SP * 1.1);
-    P(h, `${[7, 14, 22, 29].map((dx) => `M${x + dx} ${top + 4 + Math.abs(dx - r) * 0.6} L${x + dx} ${top + 66}`).join(' ')} M${x} ${top + 30} l${w} 0 M${x} ${top + 48} l${w} 0`, SP * 0.5);
+    P(h, `${[0.2, 0.4, 0.6, 0.8].map((u) => `M${f(x + u * w)} ${f(top + 4 + Math.abs(u * w - r) * 0.6)} L${f(x + u * w)} ${top + 66}`).join(' ')} M${x} ${top + 30} l${w} 0 M${x} ${top + 48} l${w} 0`, SP * 0.5);
     P(h, `M${x - 3} ${top + 69} l${w + 6} 0`, SP);
   }
   // right wing, roof terrace: a small window, the railing, a satellite dish on the corner
-  sash(h, 690, 114, 34, 40, lit());
-  railing(h, 662, 848, 156, 176, 9);
-  S(h, 'M846 96 a10 12 -20 1 0 4 -22Z', SP * 0.8);
-  P(h, 'M846 86 l-8 -4', SP * 0.6);
+  sash(h, 650, 114, 30, 40, lit());
+  railing(h, 630, 770, 156, 176, 9);
+  S(h, 'M766 96 a10 12 -20 1 0 4 -22Z', SP * 0.8);
+  P(h, 'M766 86 l-8 -4', SP * 0.6);
   // right wing, first floor: an air conditioner up high, a big window, a small one, a rail
-  ac(h, 680, 202, 54, 36);
-  sash(h, 770, 204, 64, 50, lit());
-  win(ctx, h, glowG, 726, 240, 30, 18, lit());
-  P(h, 'M664 246 L846 244 M680 246 l0 14 M740 246 l0 14 M800 245 l0 14 M846 244 l0 16', SP * 0.9);
+  ac(h, 640, 202, 46, 32);
+  sash(h, 712, 204, 52, 50, lit());
+  win(ctx, h, glowG, 688, 238, 20, 16, lit());
+  P(h, 'M632 246 L768 244 M648 246 l0 14 M700 246 l0 14 M740 245 l0 14 M768 244 l0 16', SP * 0.9);
   // corrugated canopies over both terraces, the slab edges and a drainpipe down the right edge
-  canopy(h, [244, 92], [444, 82], [256, 432], 156);
-  canopy(h, [644, 82], [870, 92], [656, 858], 156);
-  for (const y of [176, 260, 284]) P(h, `M248 ${y} L862 ${y}`, SP * 0.6).setAttribute('opacity', '0.7');
-  tube(h, [[862, 92], [862, 300]], 4, '#c9ccca');
+  canopy(h, [354, 92], [486, 84], [366, 472], 156);
+  canopy(h, [614, 82], [788, 92], [626, 776], 156);
+  for (const y of [176, 260, 284]) P(h, `M358 ${y} L782 ${y}`, SP * 0.6).setAttribute('opacity', '0.7');
+  tube(h, [[782, 92], [782, 300]], 4, '#c9ccca');
 
   // ---------- the shops
   const shop = lay('house');
   // DIVANI: a yellow frame, a black inner frame, a second yellow frame and the glass
-  fill(shop, box(258, 300, 266, 104, 0.3), K.YELLOW);
-  fill(shop, box(274, 314, 234, 90, 0.3), K.BLACK);
-  fill(shop, box(286, 324, 210, 80, 0.3), K.YELLOW);
-  win(ctx, shop, glowG, 296, 332, 190, 72, 0.75, false);
-  P(shop, 'M391 332 l0 72', SP * 0.6);
-  fill(shop, box(318, 340, 146, 28, 0.2), '#f4f2ec', SP * 0.6);
-  accent(shop, `${box(320, 342, 3, 24, 0)} ${box(458, 342, 3, 24, 0)}`, K.GREEN, 0);
-  accent(shop, `${box(326, 342, 3, 24, 0)} ${box(452, 342, 3, 24, 0)}`, K.RED, 0);
-  text(shop, 391, 360, 'DIVANI', 17, '#2f7a3a', 'Arial Black, Arial, sans-serif');
-  text(shop, 430, 366, 'Living', 6, K.RED, 'Arial, sans-serif');
-  P(shop, 'M300 380 l40 -8 l30 6 M410 376 l60 -2', SP * 0.4).setAttribute('opacity', '0.4'); // a sofa's back through the glass
-  P(shop, 'M486 360 l0 10 M492 360 l0 10', SP * 1.2);
-  text(shop, 500, 358, '34', 6, K.BLACK, 'Arial, sans-serif');
-  S(shop, box(378, 302, 22, 8, 0.2), SP * 0.6); // the light over the door
+  fill(shop, box(362, 300, 196, 104, 0.3), K.YELLOW);
+  fill(shop, box(374, 314, 172, 90, 0.3), K.BLACK);
+  fill(shop, box(384, 324, 152, 80, 0.3), K.YELLOW);
+  win(ctx, shop, glowG, 392, 332, 136, 72, 0.75, false);
+  P(shop, 'M460 332 l0 72', SP * 0.6);
+  fill(shop, box(402, 340, 116, 26, 0.2), '#f4f2ec', SP * 0.6);
+  accent(shop, `${box(404, 342, 3, 22, 0)} ${box(512, 342, 3, 22, 0)}`, K.GREEN, 0);
+  accent(shop, `${box(409, 342, 3, 22, 0)} ${box(507, 342, 3, 22, 0)}`, K.RED, 0);
+  text(shop, 460, 358, 'DIVANI', 15, '#2f7a3a', 'Arial Black, Arial, sans-serif');
+  text(shop, 492, 363.5, 'Living', 5.5, K.RED, 'Arial, sans-serif');
+  P(shop, 'M396 382 l30 -7 l24 5 M470 378 l50 -2', SP * 0.4).setAttribute('opacity', '0.4'); // a sofa's back through the glass
+  P(shop, 'M530 360 l0 10 M535 360 l0 10', SP * 1.2);
+  text(shop, 541, 358, '34', 5, K.BLACK, 'Arial, sans-serif');
+  S(shop, box(449, 302, 22, 8, 0.2), SP * 0.6); // the light over the door
   // PhoneMobile: a slanting black awning, the gold-lettered sign, shelves of accessories
-  fill(shop, 'M524 300 L770 300 L766 318 L530 324Z', K.BLACK, SP);
-  fill(shop, box(536, 318, 220, 32, 0.3), K.SIGN, SP);
-  P(shop, box(538, 320, 216, 28, 0.2), SP * 0.4);
-  text(shop, 646, 336, 'PhoneMobile', 18, K.GOLD, 'Georgia, serif');
-  text(shop, 646, 346, 'יבוא ושיווק אביזרי סלולר | הרצל 34 | טל׳ 050-3508333', 5.4, K.GOLD, 'Arial, sans-serif');
-  win(ctx, shop, glowG, 540, 352, 212, 52, 0.8, false);
-  P(shop, `M540 352 L752 352 M630 352 L630 404 ${[364, 376, 388].map((y) => `M544 ${y} L626 ${y}`).join(' ')} M544 352 l0 52 M626 352 l0 52`, SP * 0.6);
+  fill(shop, 'M556 300 L736 300 L732 318 L562 324Z', K.BLACK, SP);
+  fill(shop, box(564, 318, 166, 32, 0.3), K.SIGN, SP);
+  P(shop, box(566, 320, 162, 28, 0.2), SP * 0.4);
+  text(shop, 647, 336, 'PhoneMobile', 16, K.GOLD, 'Georgia, serif');
+  text(shop, 647, 345.5, 'יבוא ושיווק אביזרי סלולר | הרצל 34 | טל׳ 050-3508333', 4.2, K.GOLD, 'Arial, sans-serif');
+  win(ctx, shop, glowG, 568, 352, 160, 52, 0.8, false);
+  P(shop, `M568 352 L728 352 M640 352 L640 404 ${[364, 376, 388].map((y) => `M572 ${y} L636 ${y}`).join(' ')} M572 352 l0 52 M636 352 l0 52`, SP * 0.6);
   const goods = ['#d14b4b', '#3f78c4', '#e0b65a', '#4e9a4a', '#ecebe6'];
-  goods.forEach((c, i) => accent(shop, Array.from({ length: 14 }, (_, k) => box(546 + ((k * 37 + i * 13) % 76), 355 + 12 * ((k + i) % 4), 4, 7, 0.1)).filter((_, k) => (k + i) % 3).join(' '), c, SP * 0.2));
-  P(shop, 'M640 404 l0 -30 l40 0 l0 30 M690 404 l0 -22 l24 0 l0 22', SP * 0.5).setAttribute('opacity', '0.6'); // boxes inside
+  goods.forEach((c, i) => accent(shop, Array.from({ length: 14 }, (_, k) => box(574 + ((k * 37 + i * 13) % 58), 355 + 12 * ((k + i) % 4), 4, 7, 0.1)).filter((_, k) => (k + i) % 3).join(' '), c, SP * 0.2));
+  P(shop, 'M648 404 l0 -30 l36 0 l0 30 M692 404 l0 -22 l24 0 l0 22', SP * 0.5).setAttribute('opacity', '0.6'); // boxes inside
   // the building's entrance: a white graffitied pier with the blue "34" plate, an AC unit, a dark door
-  S(shop, box(770, 300, 46, 104, 0.3));
-  ac(shop, 772, 302, 40, 26);
-  accent(shop, box(788, 334, 18, 12, 0.2), K.PLATE, SP * 0.4);
-  text(shop, 797, 343.5, '34', 8, '#fdfcf8', 'Arial, sans-serif');
-  accent(shop, box(786, 348, 22, 6, 0.2), K.PLATE, SP * 0.3);
-  P(shop, 'M776 366 q4 -8 8 0 q4 8 8 0 M796 362 l0 10 M802 362 q6 0 4 5 q-4 5 -4 5 M778 384 q5 -6 10 2 t10 -2 M780 396 l8 -6 l4 6', SP * 0.6);
-  fill(shop, box(818, 300, 42, 104, 0.3), '#4a4a48');
-  P(shop, 'M824 310 l30 0 l0 90 l-30 0Z', SP * 0.4);
-  accent(shop, box(836, 334, 8, 8, 0.1), K.RED, SP * 0.3);
-  P(shop, 'M826 360 q6 -8 12 0 t12 -2', SP * 0.4).setAttribute('opacity', '0.5');
+  S(shop, box(736, 300, 44, 104, 0.3));
+  ac(shop, 738, 302, 40, 26);
+  accent(shop, box(749, 334, 18, 12, 0.2), K.PLATE, SP * 0.4);
+  text(shop, 758, 343.5, '34', 8, '#fdfcf8', 'Arial, sans-serif');
+  accent(shop, box(747, 348, 22, 6, 0.2), K.PLATE, SP * 0.3);
+  P(shop, 'M740 366 q4 -8 8 0 q4 8 8 0 M760 362 l0 10 M766 362 q6 0 4 5 q-4 5 -4 5 M742 384 q5 -6 10 2 t10 -2 M744 396 l8 -6 l4 6', SP * 0.6);
+  fill(shop, box(782, 300, 42, 104, 0.3), '#4a4a48');
+  P(shop, 'M788 310 l30 0 l0 90 l-30 0Z', SP * 0.4);
+  accent(shop, box(800, 334, 8, 8, 0.1), K.RED, SP * 0.3);
+  P(shop, 'M790 360 q6 -8 12 0 t12 -2', SP * 0.4).setAttribute('opacity', '0.5');
 
-  // ---------- cables strung across the right-hand building, swaying a little in the wind
-  const cables = [0, 1, 2].map(() => el('path', { fill: 'none', stroke: 'currentColor', 'stroke-width': SP * 0.6 }, nr));
+  // ---------- electricity: junction boxes, a meter cabinet, cable bundles down the walls
+  const el2 = lay('house');
+  for (const [x, y, w, hh] of [[784, 226, 22, 28], [340, 270, 16, 20], [1150, 200, 18, 24]]) {
+    fill(el2, box(x, y, w, hh, 0.2), '#b9bcb8', SP * 0.6);
+    P(el2, `M${x + 3} ${y + 4} l${w - 6} 0`, SP * 0.3);
+  }
+  // the meter cabinet by the shutter, with its yellow high-voltage sticker
+  fill(el2, box(1100, 318, 52, 64, 0.3), '#b9bcb8', SP * 0.8);
+  P(el2, 'M1126 320 l0 60 M1104 326 l18 0 M1130 326 l18 0', SP * 0.4);
+  accent(el2, 'M1112 340 l10 0 l-5 9Z', K.YELLOW, SP * 0.3);
+  P(el2, 'M1117 342 l-2 3 l3 0 l-2 3', SP * 0.3);
+  // bundles of cable running down the corners, held by clips
+  const bundle = (x: number, y0: number, y1: number, n: number) =>
+    P(el2, Array.from({ length: n }, (_, i) => `M${x + i * 1.6} ${y0} Q${f(x + i * 1.6 + R(-2, 2))} ${(y0 + y1) / 2} ${f(x + i * 1.6 + R(-1, 1))} ${y1}`).join(' ') + Array.from({ length: Math.floor((y1 - y0) / 30) }, (_, i) => ` M${x - 1} ${y0 + 15 + i * 30} l${n * 1.6 + 2} 0`).join(''), SP * 0.4);
+  bundle(788, 80, 226, 4);
+  bundle(792, 254, 300, 3);
+  bundle(346, 120, 270, 3);
+  bundle(1154, 90, 200, 3);
+  bundle(1158, 224, 318, 2);
+
+  // ---------- cables strung across the street front, swaying a little in the wind
+  const wires = lay('front');
+  const spans: [number, number, number, number, number][] = [ // x1, y1, x2, y2, sag
+    [L - 4, 120, 340, 126, 40], [346, 120, 788, 82, 70], [788, 82, 1010, 126, 40], [1010, 126, R1 + 4, 110, 30],
+    [L - 4, 150, 346, 150, 50], [790, 230, 1010, 140, 50], [1010, 140, R1 + 4, 150, 46],
+    [794, 120, 1150, 200, 80], [794, 140, R1 + 4, 70, 60], [340, 270, 788, 240, 46], [1158, 224, R1 + 4, 260, 30],
+  ];
+  const cables = spans.map(() => el('path', { fill: 'none', stroke: 'currentColor', 'stroke-width': SP * 0.55 }, wires));
   ctx.add({
     step({ t, wind }) {
-      const sag = (base: number, k: number) => f(base + wind * 3 * k + wobble(t * 0.5 + k * 2) * 1.2);
-      cables[0].setAttribute('d', `M864 120 Q960 ${sag(190, 1)} ${R1 + 4} 150`);
-      cables[1].setAttribute('d', `M864 240 Q920 ${sag(300, 1.3)} 1000 300`);
-      cables[2].setAttribute('d', `M900 70 Q980 ${sag(150, 0.8)} ${R1 + 4} 80`);
+      spans.forEach(([x1, y1, x2, y2, sag], i) => {
+        const k = sag / 50, s = sag + wind * 3 * k + wobble(t * 0.5 + i * 1.7) * 1.2 * k;
+        cables[i].setAttribute('d', `M${x1} ${y1} Q${f((x1 + x2) / 2)} ${f((y1 + y2) / 2 + s * 2)} ${x2} ${y2}`);
+      });
     },
   });
 
+
+  // ---------- the pavement here is grey concrete slabs
+  const pv = lay('wall');
+  surface(ctx, el('path', { d: box(L, GROUND + 0.6, WIDTH, H - GROUND - 0.6, 0), opacity: 0.6 }, pv), '#9a9c9b');
+  P(pv, Array.from({ length: Math.ceil(WIDTH / 28) }, (_, i) => `M${L + i * 28} ${GROUND} l-2 ${H - GROUND}`).join(' ') + ` M${L} ${GROUND + 18} L${R1} ${GROUND + 18}`, SP * 0.35).setAttribute('opacity', '0.5');
+
+  // ---------- benches outside the shops: dark metal frames, brown wooden slats
+  const bench = (x: number, w: number) => {
+    const g = lay('front'), y = GROUND + 18;
+    fill(g, [y - 40, y - 33, y - 26].map((sy) => box(x + 4, sy, w - 8, 5, 0.2)).join(' ') + ' ' + box(x + 2, y - 20, w - 4, 5, 0.2), '#5b4636', SP * 0.6);
+    const frame = [x + 6, x + w - 6].map((lx) => `M${lx - 3} ${y} L${lx} ${y - 18} L${lx + 1} ${y - 44}`).concat([x + 14, x + w - 14].map((lx) => `M${lx + 3} ${y + 3} L${lx} ${y - 16}`)).join(' ') + ` M${x + 3} ${y - 16} L${x + w - 3} ${y - 16}`;
+    tint(ctx, el('path', { d: frame, fill: 'none', stroke: K.BLACK, 'stroke-width': 2.4, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g), K.BLACK, 'stroke');
+  };
+  bench(574, 74);
+  bench(250, 64);
+
   // ---------- the street tree: a slim trunk and an airy crown in front of the arched windows
-  const tree = lay('bigTree');
+  const tree = at(lay('bigTree'), 24);
   limb(tree, 7, SP).draw([[468, 406], [470, 300], [462, 190]], [0, 0]);
   P(tree, 'M466 240 Q440 200 420 150 M470 220 Q500 180 530 130 M464 196 Q470 140 480 90 M430 180 Q410 160 392 140 M520 150 Q540 120 560 100', SP * 0.8);
   const crown: Clump[] = [];
