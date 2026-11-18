@@ -1,5 +1,8 @@
 // daynight.ts — time-of-day palette for line-art scenes.
 // τ ∈ [0,1): 0 midnight · 0.25 dawn · 0.5 noon · 0.75 dusk.
+// The clock stretches the real day so sunrise and sunset land on 0.25 and 0.75; the evening
+// keys hug 0.75 so it stays daylight until ~half an hour before sunset (≈0.725 on a short
+// winter day), dusk turns dark about 25 min after it (≈0.766) and full night ~1 h after (≈0.79).
 //
 // Day is dark ink on warm paper. Night inverts it: pale ink on indigo paper, with
 // warm light from windows and lanterns. The ink flips while the paper is mid-dark,
@@ -26,9 +29,9 @@ export function ramp(keys: Ramp, u: number): RGB {
   return mix(toRGB(c0), toRGB(c1), smooth(0, 1, x / span));
 }
 
-export const SKY_TOP: Ramp = [[0, '#0d1222'], [0.19, '#131a30'], [0.235, '#3d4066'], [0.27, '#cfd8e2'], [0.33, '#f3f2ee'], [0.5, '#f6f5f1'], [0.68, '#f3eee4'], [0.735, '#e3c6a6'], [0.762, '#5a5279'], [0.8, '#1b2140'], [0.86, '#0d1222']];
-export const SKY_BOTTOM: Ramp = [[0, '#1a2240'], [0.19, '#283050'], [0.235, '#d49884'], [0.27, '#f3d0b3'], [0.33, '#faf6ee'], [0.5, '#fcfbf7'], [0.68, '#f9efdc'], [0.735, '#f0a379'], [0.762, '#d47f68'], [0.8, '#383a60'], [0.86, '#1a2240']];
-export const PAPERS: Ramp = [[0, '#1a2036'], [0.19, '#1f263e'], [0.235, '#4a4561'], [0.27, '#ede4d8'], [0.33, '#fbf8f1'], [0.5, '#fdfcf8'], [0.68, '#faf4e8'], [0.735, '#f0dbc4'], [0.756, '#5d5571'], [0.8, '#262c48'], [0.86, '#1a2036']];
+export const SKY_TOP: Ramp = [[0, '#0d1222'], [0.19, '#131a30'], [0.235, '#3d4066'], [0.27, '#cfd8e2'], [0.33, '#f3f2ee'], [0.5, '#f6f5f1'], [0.725, '#f3eee4'], [0.75, '#e3c6a6'], [0.768, '#5a5279'], [0.79, '#1b2140'], [0.85, '#0d1222']];
+export const SKY_BOTTOM: Ramp = [[0, '#1a2240'], [0.19, '#283050'], [0.235, '#d49884'], [0.27, '#f3d0b3'], [0.33, '#faf6ee'], [0.5, '#fcfbf7'], [0.725, '#f9efdc'], [0.75, '#f0a379'], [0.768, '#d47f68'], [0.79, '#383a60'], [0.85, '#1a2240']];
+export const PAPERS: Ramp = [[0, '#1a2036'], [0.19, '#1f263e'], [0.235, '#4a4561'], [0.27, '#ede4d8'], [0.33, '#fbf8f1'], [0.5, '#fdfcf8'], [0.725, '#faf4e8'], [0.75, '#f0dbc4'], [0.766, '#5d5571'], [0.79, '#262c48'], [0.85, '#1a2036']];
 const INK_DARK = toRGB('#1c1c1c'), INK_LIGHT = toRGB('#efe6cf');
 
 export interface Palette {
@@ -52,7 +55,7 @@ export function palette(tau: number): Palette {
     ink: mix(INK_DARK, INK_LIGHT, inkT),
     lamp: smooth(0.78, 0.4, L),
     night: smooth(0.42, 0.1, lum(top)),
-    sunset: Math.max(smooth(0.67, 0.735, tau) * smooth(0.79, 0.745, tau), smooth(0.215, 0.245, tau) * smooth(0.3, 0.26, tau)),
+    sunset: Math.max(smooth(0.72, 0.75, tau) * smooth(0.785, 0.755, tau), smooth(0.215, 0.245, tau) * smooth(0.3, 0.26, tau)),
   };
 }
 
