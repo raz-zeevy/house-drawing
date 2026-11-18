@@ -281,7 +281,8 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   fr.addEventListener('pointerdown', (e) => { climber.forEach((c) => c.shake()); flock.startle(); drop(e, 8, [K.YELLOW, K.YELLOW, C.IVY]); });
 
   // ---------- on the pavement, in front of whoever walks by: metal barriers
-  lady(ctx, lay('street'), GROUND + 16, R1 + 60, L - 60, { gate: 216, window: ora! }); // walks slowly by, right to left; home at night
+  // she walks slowly by, right to left, starting from the far end of Herzl 34 (the next lot); home at night
+  lady(ctx, lay('street'), GROUND + 16, R1 + PAD + 1280 - 40, L - 60, { gate: 216, window: ora! });
 
   const fall = lay('fall');
   for (const x of [300, 420, 760]) {

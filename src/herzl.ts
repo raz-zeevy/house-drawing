@@ -7,6 +7,7 @@
 // the importer's shop on the left, an old beige block with dark shutters on the right.
 // In front, a thin airy street tree and a street lamp with a dove on it.
 import { el, limb, paint, f, type Vec } from '../lib/ink.ts';
+import { toRGB } from '../lib/daynight.ts';
 import { seeded, wobble } from '../lib/motion.ts';
 import type { Drop } from './falls.ts';
 import { birds } from './birds.ts';
@@ -32,12 +33,15 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   // about a third of the flats stay dark at night
   const lit = () => (ctx.rand() < 0.35 ? 2 : ctx.rand(0.4, 0.7));
   const R = ctx.rand, lay = (name: keyof Ctx['layers']) => at(ctx.layers[name], x0 + PAD), glowG = at(ctx.glow, x0 + PAD);
-  const fill = (g: Element, d: string, colour: string, w = SP * 0.8) => surface(ctx, paint(g, colour, w), colour).setAttribute('d', d);
-  const accent = (g: Element, d: string, colour: string, w = SP * 0.5) => tint(ctx, paint(g, colour, w), colour).setAttribute('d', d);
+  // only the teal building is in colour: everything around it on the street is drawn in greys
+  let bw = false;
+  const grey = (c: string) => { if (!bw) return c; const v = Math.round(toRGB(c).reduce((a, x, i) => a + x * [0.3, 0.59, 0.11][i], 0)); return '#' + v.toString(16).padStart(2, '0').repeat(3); };
+  const fill = (g: Element, d: string, colour: string, w = SP * 0.8) => surface(ctx, paint(g, grey(colour), w), grey(colour)).setAttribute('d', d);
+  const accent = (g: Element, d: string, colour: string, w = SP * 0.5) => tint(ctx, paint(g, grey(colour), w), grey(colour)).setAttribute('d', d);
   const text = (g: Element, x: number, y: number, s: string, size: number, colour: string, font: string, anchor = 'middle') => {
     const n = el('text', { x, y, 'font-size': size, 'font-family': font, 'font-weight': 700, 'text-anchor': anchor, stroke: 'none' }, g);
     n.textContent = s;
-    tint(ctx, n, colour);
+    tint(ctx, n, grey(colour));
   };
   const tube = (g: Element, pts: Vec[], w: number, colour: string) => {
     const l = limb(g, w, SP * 0.55);
@@ -72,6 +76,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   };
 
   // The building is 360..780: left wing 360..480, the middle 480..620, right wing 620..780.
+  bw = true;
   // ---------- next door on the left: a grey block with balconies over the importer's shop and a kiosk
   const nb = lay('back');
   fill(nb, box(L - 4, 60, 364 + PAD, 244, 0.4), K.NEIGHBOUR);
@@ -122,6 +127,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   text(nr, 940, 305, '32', 12, K.RED, 'Arial, sans-serif');
   P(nr, 'M916 340 q6 -10 12 0 t12 -2 q4 8 10 0 M930 356 l6 -8 l4 10 l6 -9 M1060 350 q8 -12 14 0 t10 4', SP * 0.5).setAttribute('opacity', '0.55');
 
+  bw = false;
   // ---------- the building
   const h = lay('house');
   // the teal body: wings up to the terrace parapets, the middle tower stepping up a little higher
@@ -220,6 +226,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   accent(shop, box(800, 334, 8, 8, 0.1), K.RED, SP * 0.3);
   P(shop, 'M790 360 q6 -8 12 0 t12 -2', SP * 0.4).setAttribute('opacity', '0.5');
 
+  bw = true;
   // ---------- electricity: junction boxes, a meter cabinet, cable bundles down the walls
   const el2 = lay('house');
   for (const [x, y, w, hh] of [[784, 226, 22, 28], [340, 270, 16, 20], [1150, 200, 18, 24]]) {
@@ -240,6 +247,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   bundle(1154, 90, 200, 3);
   bundle(1158, 224, 318, 2);
 
+  bw = false;
   // ---------- cables strung across the street front, swaying a little in the wind
   const wires = lay('front');
   const spans: [number, number, number, number, number][] = [ // x1, y1, x2, y2, sag
