@@ -170,7 +170,8 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   // middle, first floor: two tall arched windows with grilles
   for (const x of [500, 580]) {
     const w = 34, top = 206, r = w / 2;
-    win(ctx, h, glowG, x, top, w, 66, lit(), false);
+    lit(); // drawn but unused, so the other windows keep their lights
+    win(ctx, h, glowG, x, top, w, 66, 2, false); // always dark: 2 is above any lamp level
     // teal corners turn the pane's square top into an arch
     fill(h, `M${x - 1} ${top - 1} L${x + r} ${top - 1} A${r} ${r} 0 0 0 ${x - 1} ${top + r}Z M${x + w + 1} ${top - 1} L${x + r} ${top - 1} A${r} ${r} 0 0 1 ${x + w + 1} ${top + r}Z`, K.TEAL, 0);
     P(h, `M${x} ${top + 66} L${x} ${top + r} A${r} ${r} 0 0 1 ${x + w} ${top + r} L${x + w} ${top + 66}`, SP * 1.1);
