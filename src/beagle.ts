@@ -4,7 +4,7 @@
 // meows. After a while on his feet he gets tired, sits and pants for a moment. When he
 // trots up to Ora on her walk he sits, looks up and wags while she pets him. He jumps up
 // on benches, trots along the seat and hops down, and bounds over tree pits. Coming up
-// on Angel while she's awake, one time in three he stops and barks at her.
+// on Angel while she's awake, he stops and barks at her.
 // Each moves at exactly their own gait's travel speed, so paws stay planted.
 import { el, shape, blot, paint, pen, limb, solid, joint, hang, place, toScene, f, PEN, type Vec } from '../lib/ink.ts';
 import { gait } from '../lib/gait.ts';
@@ -123,7 +123,7 @@ export function beagle(parent: Element, { ground, scale, width, sniffAt, tint, b
       }
       walked += dt * go;
       const catGap = cx - x - REACH; // Angel ahead of his nose
-      if (!mode && !hop.air && !catSeen && catGap > 0 && catGap < 30 && cmode !== 'nap') { catSeen = true; if (Math.random() < 1 / 3) { mode = 'bark'; modeT = 0; } }
+      if (!mode && !hop.air && !catSeen && catGap > 0 && catGap < 30 && cmode !== 'nap') { catSeen = true; mode = 'bark'; modeT = 0; }
       if (catSeen && Math.abs(catGap) > 120) catSeen = false;
       if (!mode && !hop.air && walked > nextRest && x > 0 && x < width) { mode = 'rest'; modeT = 0; walked = 0; nextRest = 10 + Math.random() * 8; }
       if (mode) { modeT += dt; if (modeT > DUR[mode]) mode = null; }
