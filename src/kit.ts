@@ -26,7 +26,9 @@ export type LayerName = (typeof LAYERS)[number];
 /** A house on the street: how wide its lot is (at least 1280, one desktop card, so a card never shows two houses), where it really is (its sky follows that place's sun), and how to draw it at x0. */
 export interface LotDef { name: string; width: number; place: Place; build(ctx: Ctx, x0: number, drop: Drop): Lot }
 /** What a drawn lot tells the street: where the dog likes to stop and sniff, where he sleeps at night, and a wall top the cat can walk on (scene x). */
-export interface Lot { sniffAt?: number; bed?: Bed; wall?: { x0: number; x1: number; y: number } }
+export interface Lot { sniffAt?: number; bed?: Bed; wall?: { x0: number; x1: number; y: number }; walker?: Walker }
+/** Someone on the pavement the dog can meet: her scene x, whether she's on her ordinary walk (and so free to stop), and asking her to pet him for `secs`, his head at `head()`. */
+export interface Walker { x(): number; free(): boolean; pet(head: () => Vec, secs: number): void }
 /** The dog's bed: he goes in through the gate at `gate` after sunset; `show` puts him to sleep there or wakes him. */
 export interface Bed { gate: number; show(asleep: boolean): void }
 

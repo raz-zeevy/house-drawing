@@ -10,7 +10,7 @@ import type { Drop } from './falls.ts';
 import { lady, oraAtWindow, type OraWindow } from './lady.ts';
 import { birds } from './birds.ts';
 import { JERUSALEM } from './places.ts';
-import { type Ctx, type Clump, type LotDef, type Win, C, GROUND, H, SP, P, S, at, box, blocks, clump, leaf, surface, tint, win } from './kit.ts';
+import { type Ctx, type Clump, type LotDef, type Lot, type Win, C, GROUND, H, SP, P, S, at, box, blocks, clump, leaf, surface, tint, win } from './kit.ts';
 
 // The drawing spans 0..1104; the lot is one desktop card wide (1280) so a card never shows two houses,
 // with the walls carried on through the PAD on each side.
@@ -27,7 +27,7 @@ export const greenGateLot: LotDef = {
   build: (ctx, x0, drop) => build({ ...ctx, rand: seeded(303) }, x0, drop),
 };
 
-function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
+function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   const R = ctx.rand, lay = (name: keyof Ctx['layers']) => at(ctx.layers[name], x0 + PAD), glowG = at(ctx.glow, x0 + PAD);
   const tube = (g: Element, pts: Vec[], w: number, colour: string) => {
     const l = limb(g, w, SP * 0.55);
@@ -281,7 +281,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
   fr.addEventListener('pointerdown', (e) => { climber.forEach((c) => c.shake()); flock.startle(); drop(e, 8, [K.YELLOW, K.YELLOW, C.IVY]); });
 
   // ---------- on the pavement, in front of whoever walks by: metal barriers
-  lady(ctx, lay('street'), GROUND + 16, R1 + 60, L - 60, { gate: 216, window: ora! }); // walks slowly by, right to left; home at night
+  const walker = lady(ctx, lay('street'), GROUND + 16, R1 + 60, L - 60, { gate: 216, window: ora!, x0: x0 + PAD }); // walks slowly by, right to left; home at night
 
   const fall = lay('fall');
   for (const x of [300, 420, 760]) {
@@ -290,5 +290,5 @@ function build(ctx: Ctx, x0: number, drop: Drop): { sniffAt: number } {
     el('path', { d, fill: 'none', style: 'stroke: var(--paper)', 'stroke-width': 1.1, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'pointer-events': 'none' }, fall);
   }
 
-  return { sniffAt: x0 + PAD + 150 };
+  return { sniffAt: x0 + PAD + 150, walker };
 }

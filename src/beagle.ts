@@ -1,12 +1,13 @@
 // A beagle and his friend the white cat each wander along the pavement, left to
 // right, at their own pace: he trots quickly and stops to sniff at the gate, she
 // strolls and pauses now and then. Click the dog and he barks; click the cat and she
-// meows. After a while on his feet he gets tired, sits and pants for a moment.
+// meows. After a while on his feet he gets tired, sits and pants for a moment. When he
+// trots up to Ora on her walk he sits, looks up and wags while she pets him.
 // Each moves at exactly their own gait's travel speed, so paws stay planted.
 import { el, shape, blot, paint, pen, limb, solid, joint, hang, place, toScene, f, PEN, type Vec } from '../lib/ink.ts';
 import { gait } from '../lib/gait.ts';
 import { spring, pendulum } from '../lib/motion.ts';
-import { type Bed, isNight } from './kit.ts';
+import { type Bed, type Walker, isNight } from './kit.ts';
 
 type Tint = <T extends Element>(n: T, c: string, attr?: string) => T;
 export const TAN = '#b9783f', EAR = '#7f5129';
@@ -18,9 +19,9 @@ const oval = (cx: number, cy: number, rx: number, ry: number) =>
   `M${f(cx - rx)} ${f(cy)} a${rx} ${ry} 0 1 0 ${f(2 * rx)} 0 a${rx} ${ry} 0 1 0 ${f(-2 * rx)} 0Z`;
 const bump = (x: number, w = 0.35) => (x > 0 && x < w ? Math.sin((Math.PI * x) / w) : 0);
 
-export interface BeagleOptions { ground: number; scale: number; width: number; sniffAt: number; tint: Tint; bed?: Bed; wall?: { x0: number; x1: number; y: number } }
+export interface BeagleOptions { ground: number; scale: number; width: number; sniffAt: number; tint: Tint; bed?: Bed; wall?: { x0: number; x1: number; y: number }; friend?: Walker }
 
-export function beagle(parent: Element, { ground, scale, width, sniffAt, tint, bed, wall }: BeagleOptions): { step(t: number, dt: number, wind: number, tau: number): void; x(): number } {
+export function beagle(parent: Element, { ground, scale, width, sniffAt, tint, bed, wall, friend }: BeagleOptions): { step(t: number, dt: number, wind: number, tau: number): void; x(): number } {
   const root = el('g', {}, parent);
   const trot = gait({ kind: 'walk', stride: 10, duty: 0.6, period: 0.46, lift: 2.4, heelOff: 6, thigh: BONE, shin: BONE, ankleY: 118.8, ground: 120, toe: 1.8 });
 
@@ -74,9 +75,10 @@ export function beagle(parent: Element, { ground, scale, width, sniffAt, tint, b
 
   const earSwing = pendulum(14, 1.6), tailWag = spring(80, 6);
   let x = 220, phase = 0.1, go = 1;
-  let mode: 'bark' | 'sniff' | 'rest' | null = null, modeT = 0, sniffed = false, walked = 0, nextRest = 9;
+  let mode: 'bark' | 'sniff' | 'rest' | 'pet' | null = null, modeT = 0, sniffed = false, walked = 0, nextRest = 9;
   let home = false, started = false; // home: asleep in the hammock for the night
-  const DUR = { bark: 2.6, sniff: 3.2, rest: 3.2 };
+  const DUR = { bark: 2.6, sniff: 3.2, rest: 3.2, pet: 3.6 };
+  let met = false, headAt: Vec = [0, 0]; // met: already stopped for Ora this time round; headAt: his head in scene space, for her hand
   dog.addEventListener('pointerdown', () => { if (!mode) { mode = 'bark'; modeT = 0; } });
   cat.addEventListener('pointerdown', () => { if (cmode !== 'meow') { cmode = 'meow'; cmodeT = 0; cdur = 2.4; } });
 
@@ -92,6 +94,12 @@ export function beagle(parent: Element, { ground, scale, width, sniffAt, tint, b
       if (!home) {
       const before = x;
       if (!mode && !sniffed && x > sniffAt) { mode = 'sniff'; modeT = 0; sniffed = true; }
+      if (friend) {
+        // trotting right into Ora walking left: he stops with his head just short of her and she pets him
+        const gap = friend.x() - x;
+        if (!mode && !met && gap > 52 && gap < 72 && friend.free()) { mode = 'pet'; modeT = 0; met = true; friend.pet(() => headAt, DUR.pet); }
+        if (met && Math.abs(gap) > 120) met = false;
+      }
       walked += dt * go;
       if (!mode && walked > nextRest && x > 0 && x < width) { mode = 'rest'; modeT = 0; walked = 0; nextRest = 10 + Math.random() * 8; }
       if (mode) { modeT += dt; if (modeT > DUR[mode]) mode = null; }
@@ -104,12 +112,12 @@ export function beagle(parent: Element, { ground, scale, width, sniffAt, tint, b
 
       // hind legs on the gait, front legs a quarter cycle later
       const hp = trot.pose(phase, go), fp = trot.pose(phase + 0.25, go);
-      const sitE = mode === 'rest' ? Math.min(1, modeT * 2.2, (DUR.rest - modeT) * 2.2) : 0;
+      const sitE = mode === 'rest' || mode === 'pet' ? Math.min(1, modeT * 2.2, (DUR[mode] - modeT) * 2.2) : 0;
       const sit = sitE * sitE * (3 - 2 * sitE);
       const H: Vec = [hp.hip[0] + sit * 5, hp.hip[1] + sit * 9], S: Vec = [64 - sit * 2, fp.hip[1] - sit * 4.5];
       const sniff = mode === 'sniff' ? Math.min(1, modeT * 2, (DUR.sniff - modeT) * 2) : 0;
       const barkK = mode === 'bark' ? bump(modeT - 0.35) + bump(modeT - 1.0) + bump(modeT - 1.6) : 0;
-      const nod = sniff * 6 - barkK * 2.4 + fp.bob * 0.5 + 1.5 * go; // nose a little low on the trot
+      const nod = sniff * 6 - barkK * 2.4 + fp.bob * 0.5 + 1.5 * go - (mode === 'pet' ? sit * 5 : 0); // looking up at her while she pets him // nose a little low on the trot
       const legsOf = (i: number) => {
         const front: Vec = [fp.feet[i].ankle[0] + 24, fp.feet[i].ankle[1]];
         return { hind: [H, sit > 0.01 ? joint(H, hp.feet[i].ankle, BONE, BONE, 1) : hp.feet[i].knee, hp.feet[i].ankle] as Vec[], fore: [S, joint(S, front, BONE, BONE, -1), front] as Vec[], paws: [hp.feet[i].ankle, front] };
@@ -138,12 +146,13 @@ export function beagle(parent: Element, { ground, scale, width, sniffAt, tint, b
       ear.setAttribute('d', `M${f(E[0] + 1.4)} ${f(E[1])} Q${f(ec[0] + 2.6)} ${f(ec[1])} ${f(tip[0])} ${f(tip[1])} Q${f(ec[0] - 1.6)} ${f(ec[1])} ${f(E[0] - 1.2)} ${f(E[1] + 0.4)}Z`);
       collar.setAttribute('d', `M${f(S[0] + 4.4)} ${f(S[1] - 8.5 + nod * 0.5)} Q${f(S[0] + 7)} ${f(S[1] - 6.5 + nod * 0.5)} ${f(S[0] + 8.4)} ${f(S[1] - 4 + nod * 0.4)}`);
 
-      const fast = mode === 'bark';
+      const fast = mode === 'bark' || mode === 'pet';
       const wag = tailWag.step(Math.sin(t * (fast ? 20 : 8)) * (fast ? 26 : 10), dt);
       const T: Vec = [H[0] - 4.6, H[1] - 3.6], tTip = hang(T, 11, 196 + wag * 1.3 + sit * 70);
       tail.draw([T, hang(T, 6, 206 + wag + sit * 50), tTip], [0, 0]);
       tailTip.setAttribute('d', oval(tTip[0], tTip[1], 1.3, 1.3));
 
+      headAt = toScene(x, ground, 1, Hd[0] + 1, Hd[1] - 3.6, scale);
       const ms = toScene(x, ground, 1, Hd[0] + 6, Hd[1] - 9, scale);
       woof.setAttribute('x', f(ms[0])); woof.setAttribute('y', f(ms[1]));
       woof.setAttribute('opacity', f(Math.min(1, barkK * 1.6)));
