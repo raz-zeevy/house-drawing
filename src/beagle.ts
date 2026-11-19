@@ -2,12 +2,14 @@
 // right, at their own pace: he trots quickly and stops to sniff at the gate, she
 // strolls and pauses now and then. Click the dog and he barks; click the cat and she
 // meows. After a while on his feet he gets tired, sits and pants for a moment. When he
-// trots up to Ora on her walk he sits, looks up and wags while she pets him.
+// trots up to Ora on her walk he sits, looks up and wags while she pets him. He jumps up
+// on benches, trots along the seat and hops down, and bounds over tree pits. Coming up
+// on Angel while she's awake, one time in three he stops and barks at her.
 // Each moves at exactly their own gait's travel speed, so paws stay planted.
 import { el, shape, blot, paint, pen, limb, solid, joint, hang, place, toScene, f, PEN, type Vec } from '../lib/ink.ts';
 import { gait } from '../lib/gait.ts';
 import { spring, pendulum } from '../lib/motion.ts';
-import { type Bed, type Walker, isNight } from './kit.ts';
+import { type Bed, type Hop, type Walker, isNight } from './kit.ts';
 
 type Tint = <T extends Element>(n: T, c: string, attr?: string) => T;
 export const TAN = '#b9783f', EAR = '#7f5129';
@@ -19,9 +21,9 @@ const oval = (cx: number, cy: number, rx: number, ry: number) =>
   `M${f(cx - rx)} ${f(cy)} a${rx} ${ry} 0 1 0 ${f(2 * rx)} 0 a${rx} ${ry} 0 1 0 ${f(-2 * rx)} 0Z`;
 const bump = (x: number, w = 0.35) => (x > 0 && x < w ? Math.sin((Math.PI * x) / w) : 0);
 
-export interface BeagleOptions { ground: number; scale: number; width: number; sniffAt: number; tint: Tint; bed?: Bed; wall?: { x0: number; x1: number; y: number }; friend?: Walker }
+export interface BeagleOptions { ground: number; scale: number; width: number; sniffAt: number; tint: Tint; bed?: Bed; wall?: { x0: number; x1: number; y: number }; friend?: Walker; hops?: Hop[] }
 
-export function beagle(parent: Element, { ground, scale, width, sniffAt, tint, bed, wall, friend }: BeagleOptions): { step(t: number, dt: number, wind: number, tau: number): void; x(): number } {
+export function beagle(parent: Element, { ground, scale, width, sniffAt, tint, bed, wall, friend, hops = [] }: BeagleOptions): { step(t: number, dt: number, wind: number, tau: number): void; x(): number } {
   const root = el('g', {}, parent);
   const trot = gait({ kind: 'walk', stride: 10, duty: 0.6, period: 0.46, lift: 2.4, heelOff: 6, thigh: BONE, shin: BONE, ankleY: 118.8, ground: 120, toe: 1.8 });
 
@@ -78,6 +80,24 @@ export function beagle(parent: Element, { ground, scale, width, sniffAt, tint, b
   let mode: 'bark' | 'sniff' | 'rest' | 'pet' | null = null, modeT = 0, sniffed = false, walked = 0, nextRest = 9;
   let home = false, started = false; // home: asleep in the hammock for the night
   const DUR = { bark: 2.6, sniff: 3.2, rest: 3.2, pet: 3.6 };
+  // how high his paws are off the pavement at x, whether he's in the air, and how much faster he goes across (a bound covers ground)
+  const REACH = 24 * scale; // hind paws to front paws
+  const arc = (u: number, from: number, to: number, apex: number) => from + (to - from) * u + apex * 4 * u * (1 - u);
+  const lift = (px: number): { y: number; air: boolean; pace: number } => {
+    for (const h of hops) {
+      if (h.top > 0) {
+        const a = h.x0 - REACH, b = h.x0 + 6, c = h.x1 - REACH - 6, d = h.x1; // up when his front paws reach the seat, down off the far end
+        if (px >= a && px < b) return { y: arc((px - a) / (b - a), 0, h.top, 8), air: true, pace: 1.5 };
+        if (px >= b && px < c) return { y: h.top, air: false, pace: 1 };
+        if (px >= c && px < d) return { y: arc((px - c) / (d - c), h.top, 0, 5), air: true, pace: 1.5 };
+      } else {
+        const a = h.x0 - REACH - 4, b = h.x1 + 4;
+        if (px >= a && px < b) return { y: arc((px - a) / (b - a), 0, 0, 18), air: true, pace: 2.6 };
+      }
+    }
+    return { y: 0, air: false, pace: 1 };
+  };
+  let catSeen = false; // already decided whether to bark at Angel this time he passes her
   let met = false, headAt: Vec = [0, 0]; // met: already stopped for Ora this time round; headAt: his head in scene space, for her hand
   dog.addEventListener('pointerdown', () => { if (!mode) { mode = 'bark'; modeT = 0; } });
   cat.addEventListener('pointerdown', () => { if (cmode !== 'meow') { cmode = 'meow'; cmodeT = 0; cdur = 2.4; } });
@@ -93,22 +113,26 @@ export function beagle(parent: Element, { ground, scale, width, sniffAt, tint, b
       dog.style.display = home ? 'none' : '';
       if (!home) {
       const before = x;
-      if (!mode && !sniffed && x > sniffAt) { mode = 'sniff'; modeT = 0; sniffed = true; }
+      const hop = lift(x), gy = ground - hop.y;
+      if (!mode && !hop.air && !sniffed && x > sniffAt) { mode = 'sniff'; modeT = 0; sniffed = true; }
       if (friend) {
         // trotting right into Ora walking left: he stops with his head just short of her and she pets him
         const gap = friend.x() - x;
-        if (!mode && !met && gap > 52 && gap < 72 && friend.free()) { mode = 'pet'; modeT = 0; met = true; friend.pet(() => headAt, DUR.pet); }
+        if (!mode && !hop.air && !met && gap > 52 && gap < 72 && friend.free()) { mode = 'pet'; modeT = 0; met = true; friend.pet(() => headAt, DUR.pet); }
         if (met && Math.abs(gap) > 120) met = false;
       }
       walked += dt * go;
-      if (!mode && walked > nextRest && x > 0 && x < width) { mode = 'rest'; modeT = 0; walked = 0; nextRest = 10 + Math.random() * 8; }
+      const catGap = cx - x - REACH; // Angel ahead of his nose
+      if (!mode && !hop.air && !catSeen && catGap > 0 && catGap < 30 && cmode !== 'nap') { catSeen = true; if (Math.random() < 1 / 3) { mode = 'bark'; modeT = 0; } }
+      if (catSeen && Math.abs(catGap) > 120) catSeen = false;
+      if (!mode && !hop.air && walked > nextRest && x > 0 && x < width) { mode = 'rest'; modeT = 0; walked = 0; nextRest = 10 + Math.random() * 8; }
       if (mode) { modeT += dt; if (modeT > DUR[mode]) mode = null; }
       go += ((mode ? 0 : 1) - go) * Math.min(1, dt * 3);
-      phase += (dt / trot.period) * go;
-      x += trot.speed * scale * dt * go;
+      phase += (dt / trot.period) * go * (hop.air ? 0.15 : 1); // legs held out through a jump
+      x += trot.speed * scale * dt * go * hop.pace;
       if (x > width + 90) { x = -90; sniffed = false; }
       if (bed && night && before < bed.gate && x >= bed.gate) { home = true; bed.show(true); }
-      place(dog, x, ground, 1, scale);
+      place(dog, x, gy, 1, scale);
 
       // hind legs on the gait, front legs a quarter cycle later
       const hp = trot.pose(phase, go), fp = trot.pose(phase + 0.25, go);
@@ -152,8 +176,8 @@ export function beagle(parent: Element, { ground, scale, width, sniffAt, tint, b
       tail.draw([T, hang(T, 6, 206 + wag + sit * 50), tTip], [0, 0]);
       tailTip.setAttribute('d', oval(tTip[0], tTip[1], 1.3, 1.3));
 
-      headAt = toScene(x, ground, 1, Hd[0] + 1, Hd[1] - 3.6, scale);
-      const ms = toScene(x, ground, 1, Hd[0] + 6, Hd[1] - 9, scale);
+      headAt = toScene(x, gy, 1, Hd[0] + 1, Hd[1] - 3.6, scale);
+      const ms = toScene(x, gy, 1, Hd[0] + 6, Hd[1] - 9, scale);
       woof.setAttribute('x', f(ms[0])); woof.setAttribute('y', f(ms[1]));
       woof.setAttribute('opacity', f(Math.min(1, barkK * 1.6)));
       }

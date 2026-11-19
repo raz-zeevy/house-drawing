@@ -333,6 +333,9 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   // the air conditioners hum along
   ctx.add({ step: ({ t }) => { for (const a of fans) a.g.setAttribute('transform', `translate(${f(a.cx)} ${f(a.cy)}) rotate(${f((t * a.speed * 60) % 360)})`); } });
 
-  return { sniffAt: x0 + PAD + 1010 };
+  // the dog jumps up on the benches and bounds over the tree pit
+  const at0 = x0 + PAD, seat = 22; // a bench seat is 22 above where the dog walks
+  const hops = [{ x0: at0 + 252, x1: at0 + 312, top: seat }, { x0: at0 + 576, x1: at0 + 646, top: seat }, { x0: at0 + 457, x1: at0 + 527, top: 0 }];
+  return { sniffAt: x0 + PAD + 1010, hops };
 }
 
