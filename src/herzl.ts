@@ -38,10 +38,17 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   const grey = (c: string) => { if (!bw) return c; const v = Math.round(toRGB(c).reduce((a, x, i) => a + x * [0.3, 0.59, 0.11][i], 0)); return '#' + v.toString(16).padStart(2, '0').repeat(3); };
   const fill = (g: Element, d: string, colour: string, w = SP * 0.8) => surface(ctx, paint(g, grey(colour), w), grey(colour)).setAttribute('d', d);
   const accent = (g: Element, d: string, colour: string, w = SP * 0.5) => tint(ctx, paint(g, grey(colour), w), grey(colour)).setAttribute('d', d);
-  const text = (g: Element, x: number, y: number, s: string, size: number, colour: string, font: string, anchor = 'middle') => {
-    const n = el('text', { x, y, 'font-size': size, 'font-family': font, 'font-weight': 700, 'text-anchor': anchor, stroke: 'none' }, g);
-    n.textContent = s;
-    tint(ctx, n, grey(colour));
+  // signs carry no real lettering, just a scribble the length the words would be
+  const text = (g: Element, x: number, y: number, s: string, size: number, colour: string) => {
+    const w = s.length * size * 0.55, h = size * 0.32, step = size * 0.42, x1 = x + w / 2;
+    let d = `M${f(x - w / 2)} ${f(y - h)}`;
+    for (let sx = x - w / 2, up = true; sx < x1; up = !up) {
+      const st = step * R(0.5, 1.5), tall = up && R() < 0.25 ? 2.6 : R(0.4, 1.5); // the odd tall stroke, like an ascender
+      d += ` Q${f(sx + st * 0.5)} ${f(y - h + (up ? -h : h) * tall)} ${f(Math.min(sx + st, x1))} ${f(y - h + R(-h, h) * 0.4)}`;
+      sx += st;
+      if (R() < 0.12 && sx < x1 - step) { sx += step * 0.8; d += ` M${f(sx)} ${f(y - h)}`; } // a gap between words
+    }
+    tint(ctx, el('path', { d, fill: 'none', stroke: grey(colour), 'stroke-width': Math.max(0.5, size * 0.11), 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g), grey(colour), 'stroke');
   };
   const tube = (g: Element, pts: Vec[], w: number, colour: string) => {
     const l = limb(g, w, SP * 0.55);
@@ -95,14 +102,14 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   ac(nb, 316, 204, 34, 22);
   // the importer's shop: a green sign over shelves of goods
   fill(nb, box(L + 6, 300, 238 + PAD - 6, 26, 0.3), '#7cae55');
-  text(nb, 120, 318, 'חנות היבואן', 14, '#fdfcf8', 'Arial, sans-serif');
-  text(nb, 120, 324, 'כל המותגים במקום אחד', 6, '#fdfcf8', 'Arial, sans-serif');
+  text(nb, 120, 318, 'חנות היבואן', 14, '#fdfcf8');
+  text(nb, 120, 324, 'כל המותגים במקום אחד', 6, '#fdfcf8');
   win(ctx, nb, glowG, L + 10, 332, 226 + PAD - 10, 72, 0.7, false);
   P(nb, [346, 362, 378, 394].map((y) => `M${L + 10} ${y} L236 ${y}`).join(' '), SP * 0.4);
   accent(nb, Array.from({ length: 70 }, () => box(R(L + 14, 230), [338, 354, 370, 386][Math.floor(R(0, 4))], R(3, 6), 6, 0.1)).join(' '), K.PLATE, SP * 0.2);
   // a kiosk: a blue sign, a fridge of drinks behind the glass
   fill(nb, box(248, 300, 106, 26, 0.3), K.PLATE);
-  text(nb, 301, 318, 'קיוסק', 14, '#fdfcf8', 'Arial, sans-serif');
+  text(nb, 301, 318, 'קיוסק', 14, '#fdfcf8');
   win(ctx, nb, glowG, 252, 332, 98, 72, 0.7, false);
   P(nb, 'M300 332 l0 72 M256 340 l38 0 l0 60 l-38 0Z M256 360 l38 0 M256 380 l38 0', SP * 0.5);
   accent(nb, Array.from({ length: 18 }, (_, i) => box(259 + (i % 6) * 6, 344 + Math.floor(i / 6) * 20, 3, 12, 0.1)).join(' '), K.RED, SP * 0.2);
@@ -124,7 +131,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   fill(nr, box(906, 310, 80, 94, 0.3), '#a3a6a5');
   P(nr, Array.from({ length: 13 }, (_, i) => `M908 ${316 + i * 7} l76 0`).join(' '), SP * 0.35);
   fill(nr, box(920, 292, 40, 16, 0.2), '#ecebe6', SP * 0.5);
-  text(nr, 940, 305, '32', 12, K.RED, 'Arial, sans-serif');
+  text(nr, 940, 305, '32', 12, K.RED);
   P(nr, 'M916 340 q6 -10 12 0 t12 -2 q4 8 10 0 M930 356 l6 -8 l4 10 l6 -9 M1060 350 q8 -12 14 0 t10 4', SP * 0.5).setAttribute('opacity', '0.55');
 
   bw = false;
@@ -213,18 +220,18 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   fill(shop, box(402, 340, 116, 26, 0.2), '#f4f2ec', SP * 0.6);
   accent(shop, `${box(404, 342, 3, 22, 0)} ${box(512, 342, 3, 22, 0)}`, K.GREEN, 0);
   accent(shop, `${box(409, 342, 3, 22, 0)} ${box(507, 342, 3, 22, 0)}`, K.RED, 0);
-  text(shop, 460, 358, 'DIVANI', 15, '#2f7a3a', 'Arial Black, Arial, sans-serif');
-  text(shop, 492, 363.5, 'Living', 5.5, K.RED, 'Arial, sans-serif');
+  text(shop, 460, 358, 'DIVANI', 15, '#2f7a3a');
+  text(shop, 492, 363.5, 'Living', 5.5, K.RED);
   P(shop, 'M396 382 l30 -7 l24 5 M470 378 l50 -2', SP * 0.4).setAttribute('opacity', '0.4'); // a sofa's back through the glass
   P(shop, 'M530 360 l0 10 M535 360 l0 10', SP * 1.2);
-  text(shop, 541, 358, '34', 5, K.BLACK, 'Arial, sans-serif');
+  text(shop, 541, 358, '34', 5, K.BLACK);
   S(shop, box(449, 302, 22, 8, 0.2), SP * 0.6); // the light over the door
   // PhoneMobile: a slanting black awning, the gold-lettered sign, shelves of accessories
   fill(shop, 'M556 300 L736 300 L732 318 L562 324Z', K.BLACK, SP);
   fill(shop, box(564, 318, 166, 32, 0.3), K.SIGN, SP);
   P(shop, box(566, 320, 162, 28, 0.2), SP * 0.4);
-  text(shop, 647, 336, 'PhoneMobile', 16, K.GOLD, 'Georgia, serif');
-  text(shop, 647, 345.5, 'יבוא ושיווק אביזרי סלולר | הרצל 34 | טל׳ 050-3508333', 4.2, K.GOLD, 'Arial, sans-serif');
+  text(shop, 647, 336, 'PhoneMobile', 16, K.GOLD);
+  text(shop, 647, 345.5, 'יבוא ושיווק אביזרי סלולר | הרצל 34 | טל׳ 050-3508333', 4.2, K.GOLD);
   win(ctx, shop, glowG, 568, 352, 160, 52, 0.8, false);
   P(shop, `M568 352 L728 352 M640 352 L640 404 ${[364, 376, 388].map((y) => `M572 ${y} L636 ${y}`).join(' ')} M572 352 l0 52 M636 352 l0 52`, SP * 0.6);
   const goods = ['#d14b4b', '#3f78c4', '#e0b65a', '#4e9a4a', '#ecebe6'];
@@ -234,7 +241,7 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
   S(shop, box(736, 300, 44, 104, 0.3));
   ac(shop, 738, 302, 40, 26);
   accent(shop, box(749, 334, 18, 12, 0.2), K.PLATE, SP * 0.4);
-  text(shop, 758, 343.5, '34', 8, '#fdfcf8', 'Arial, sans-serif');
+  text(shop, 758, 343.5, '34', 8, '#fdfcf8');
   accent(shop, box(747, 348, 22, 6, 0.2), K.PLATE, SP * 0.3);
   P(shop, 'M740 366 q4 -8 8 0 q4 8 8 0 M760 362 l0 10 M766 362 q6 0 4 5 q-4 5 -4 5 M742 384 q5 -6 10 2 t10 -2 M744 396 l8 -6 l4 6', SP * 0.6);
   fill(shop, box(782, 300, 42, 104, 0.3), '#4a4a48');
@@ -293,6 +300,11 @@ function build(ctx: Ctx, x0: number, drop: Drop): Lot {
     const frame = [x + 6, x + w - 6].map((lx) => `M${lx - 3} ${y} L${lx} ${y - 18} L${lx + 1} ${y - 44}`).concat([x + 14, x + w - 14].map((lx) => `M${lx + 3} ${y + 3} L${lx} ${y - 16}`)).join(' ') + ` M${x + 3} ${y - 16} L${x + w - 3} ${y - 16}`;
     tint(ctx, el('path', { d: frame, fill: 'none', stroke: K.BLACK, 'stroke-width': 2.4, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g), K.BLACK, 'stroke');
   };
+  // the tree's square pit of bare soil in the paving, edged with a kerb, seen from the front
+  const pit = 'M468 414 L516 414 L524 432 L460 432Z';
+  surface(ctx, paint(pv, '#6a5443', SP * 0.6), '#6a5443').setAttribute('d', pit);
+  P(pv, 'M466 412 L518 412 L527 434 L457 434Z', SP * 0.7);
+  accent(pv, Array.from({ length: 14 }, () => box(R(470, 514), R(417, 429), R(1, 2.4), 1, 0.3)).join(' '), '#8a7563', 0);
   bench(574, 74);
   bench(250, 64);
 
